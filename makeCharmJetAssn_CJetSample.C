@@ -389,7 +389,7 @@ void makeCharmJetAssn_CJetSample(int isMC=6, bool doDraw = 0){
       int candJetMatchIdx=-1;
       int candJetPartonMatchIdx=-1;
       for(int ij=0; ij<5; ij++){
-	if((hasGenDwithKpi->at(ijet) & (int)pow(2,ij))){
+	if((hasGenDwithKpi->at(ijet) & (int)pow(2,ij)) && TMath::Abs(refparton_flavorForB->at(ijet))==4){
 	  cJetEffvsPt_bg_step2[ij]->Fill(jtpt->at(ijet));
 	}
       }
@@ -511,7 +511,7 @@ void makeCharmJetAssn_CJetSample(int isMC=6, bool doDraw = 0){
 	  for(unsigned int icandParton=0; icandParton<dCandParentPartonIdx->at(icand).size(); icandParton++){
 	    if(genMatch->at(ijet) == dCandParentPartonIdx->at(icand).at(icandParton) && TMath::Abs(refparton_flavorForB->at(ijet))==4){
 	      for(int ij=0; ij<5; ij++){
-		if(dCandType->at(icand) == ij+1 && (hasGenDwithKpi->at(ijet) & (int)pow(2,ij))){
+		if(abs(dCandGenMatchPdg->at(icand)) == pdgs[ij] && (hasGenDwithKpi->at(ijet) & (int)pow(2,ij))){
 		  cJetEffvsPt_bg_step1[ij]->Fill(jtpt->at(ijet));
 		  if(djetR<djetR_testCut){
 		    cJetEffvsPt_step1[ij]->Fill(jtpt->at(ijet));

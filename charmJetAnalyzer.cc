@@ -52,7 +52,7 @@ int findGenDstar(snglhfcand* cand, int* pdg, int* nMothers, int (*motherIdx)[200
 	      if (!( nMothers[dau1] == 1 && nMothers[dau2] == 1 && nMothers[dau3] == 1 ))   continue;
 
 	      //mother index the same and not -999
-	      if ( (motherIdx[dau1][0] != motherIdx[dau2][0]) || (motherIdx[dau1][0] != motherIdx[dau3][0]) || (motherIdx[dau2][0] != motherIdx[dau3][0]) || (motherIdx[dau1][0] == -999) ) continue;
+	      if ( (motherIdx[dau1][0] != motherIdx[dau2][0]) || (motherIdx[dau1][0] == -999) ) continue;
 	      int d0index = motherIdx[dau1][0];
 	      //is D charged and just three daughters
 	      if( ! (abs (pdg[d0index]) == 421)) continue;
@@ -101,13 +101,13 @@ int findGenDcharged(snglhfcand* cand, int* pdg, int* nMothers, int (*motherIdx)[
 	      if ( dau1 == dau2 || dau1 == dau3 || dau2 == dau3 )     continue;
 
 	      // one kaon, two pion
-	      if( !(( abs(pdg[dau1]) == 321 && abs(pdg[dau2]) == 211 && abs(pdg[dau3]) == 211 )) )  continue;
+	      if( !(( abs(pdg[dau1]) == 211 && abs(pdg[dau2]) == 321 && abs(pdg[dau3]) == 211 )) )  continue;
 	      
 	      //only one mother
 	      if (!( nMothers[dau1] == 1 && nMothers[dau2] == 1 && nMothers[dau3] == 1 ))   continue;
 	      
 	      //mother index the same and not -999
-	      if ( (motherIdx[dau1][0] != motherIdx[dau2][0]) || (motherIdx[dau1][0] != motherIdx[dau3][0]) || (motherIdx[dau2][0] != motherIdx[dau3][0]) || (motherIdx[dau1][0] == -999) ) continue;
+	      if ( (motherIdx[dau1][0] != motherIdx[dau2][0]) || (motherIdx[dau1][0] != motherIdx[dau3][0]) || (motherIdx[dau1][0] == -999) ) continue;
 	      int allmotherindex = motherIdx[dau1][0];
 	      //is D charged and just three daughters
 	      if( ! (abs (pdg[allmotherindex]) == 411)) continue;
@@ -150,8 +150,8 @@ int findGenD0(snglhfcand* cand, int* pdg, int* nMothers, int (*motherIdx)[200], 
 	  if ( dau1 == -999 || dau2 == -999 ) continue;
 	  //mathed to two different gen particles
 	  if ( dau1 == dau2 ) continue;
-	  // one kaon, one pion
-	  if( ! ( abs(pdg[dau1]) == 321 && abs(pdg[dau2]) == 211)  )  continue;
+	  // one kaon, one pion //321,211
+	  if( ! ((abs(pdg[dau1]) == 211 && abs(pdg[dau2]) == 321))  )  continue;
 	  //only one mother
 	  if (!( nMothers[dau1] == 1 && nMothers[dau2] == 1 ))   continue;
 	  //mother index the same and not -999
@@ -191,46 +191,46 @@ vector<int> searchCQuarks(int idx1, vector<int> parentCandidates, int* t_nMother
   return parentCandidates;
 }
 
-vector<int> hasDDecay(int idx1, vector<int> DMesons, vector<int> duplicates, int* t_nDaughters, int* t_genPdg, int (*t_daughterIdx)[200], bool hashadronicDecay){
+vector<int> hasDDecay(int idx1, vector<int> DMesons, vector<double> duplicates, int* t_nDaughters, int* t_genPdg, int (*t_daughterIdx)[200], float* t_genPt, bool hashadronicDecay){
 
 
   if(abs(t_genPdg[idx1])==413 || abs(t_genPdg[idx1])==421 || abs(t_genPdg[idx1])==431 || abs(t_genPdg[idx1])==411) {
     //check to ensure i dont put in the same meson twice
     bool checkFlag=false;
     for(unsigned int isize=0; isize<duplicates.size(); isize++){
-      if(idx1 == duplicates.at(isize)) checkFlag=true;
+      if(t_genPt[idx1] == duplicates.at(isize)) checkFlag=true;
     }
     if(!checkFlag){
       if(!hashadronicDecay){
 	DMesons.push_back(abs(t_genPdg[idx1]));
-	duplicates.push_back(idx1);
+	duplicates.push_back(t_genPt[idx1]);
       }
       else{
 	if(abs(t_genPdg[idx1])==413){ //start with D*
 	  //cout << "D* Ndaughters: "<< t_nDaughters[idx1] << " daughter indexes: "<< t_genPdg[t_daughterIdx[idx1][0]] << " " << t_genPdg[t_daughterIdx[idx1][1]] << endl;
-	  if(t_nDaughters[idx1]==2 && abs(t_genPdg[t_daughterIdx[idx1][0]])==421 && abs(t_genPdg[t_daughterIdx[idx1][1]])==211){
+	  if(t_nDaughters[idx1]==2){
 	    int idx2 = t_daughterIdx[idx1][0];
-	    if(t_nDaughters[idx2]==2 && abs(t_genPdg[t_daughterIdx[idx2][0]])==321 && abs(t_genPdg[t_daughterIdx[idx2][1]])==211){
+	    if(t_nDaughters[idx2]==2 && ((abs(t_genPdg[t_daughterIdx[idx2][0]])==321 && abs(t_genPdg[t_daughterIdx[idx2][1]])==211) || (abs(t_genPdg[t_daughterIdx[idx2][0]])==211 && abs(t_genPdg[t_daughterIdx[idx2][1]])==321))){
 	      //  cout << "D* found!" << endl;
 	      DMesons.push_back(abs(t_genPdg[idx1]));
-	      duplicates.push_back(idx1);
+	      duplicates.push_back(t_genPt[idx1]);
 	    }
 	  }
 	}
 	if(abs(t_genPdg[idx1])==421){ //do D0
 	  // cout << "D0 Ndaughters: "<< t_nDaughters[idx1] << " daughter indexes: "<< t_genPdg[t_daughterIdx[idx1][0]] << " " << t_genPdg[t_daughterIdx[idx1][1]] << endl;
-	  if(t_nDaughters[idx1]==2 && abs(t_genPdg[t_daughterIdx[idx1][0]])==321 && abs(t_genPdg[t_daughterIdx[idx1][1]])==211){
+	  if(t_nDaughters[idx1]==2 && ((abs(t_genPdg[t_daughterIdx[idx1][0]])==321 && abs(t_genPdg[t_daughterIdx[idx1][1]])==211) || (abs(t_genPdg[t_daughterIdx[idx1][0]])==211 && abs(t_genPdg[t_daughterIdx[idx1][1]])==321))){
 	    //  cout << "D0 found!" << endl;
 	    DMesons.push_back(abs(t_genPdg[idx1]));
-	    duplicates.push_back(idx1);
+	    duplicates.push_back(t_genPt[idx1]);
 	  }
 	}
 	if(abs(t_genPdg[idx1])==411){ //do Dpm
 	  // cout << "D+/- Ndaughters: "<< t_nDaughters[idx1] << " daughter indexes: "<< t_genPdg[t_daughterIdx[idx1][0]] << " " << t_genPdg[t_daughterIdx[idx1][1]] << " " << t_genPdg[t_daughterIdx[idx1][2]] << endl;
-	  if(t_nDaughters[idx1]==3 && abs(t_genPdg[t_daughterIdx[idx1][0]])==321 && abs(t_genPdg[t_daughterIdx[idx1][1]])==211 && abs(t_genPdg[t_daughterIdx[idx1][2]])==211){
+	  if(t_nDaughters[idx1]==3 && ((abs(t_genPdg[t_daughterIdx[idx1][0]])==321 && abs(t_genPdg[t_daughterIdx[idx1][1]])==211 && abs(t_genPdg[t_daughterIdx[idx1][2]])==211) || (abs(t_genPdg[t_daughterIdx[idx1][0]])==211 && abs(t_genPdg[t_daughterIdx[idx1][1]])==321 && abs(t_genPdg[t_daughterIdx[idx1][2]])==211))){
 	    // cout << "Dpm found!" << endl;
 	    DMesons.push_back(abs(t_genPdg[idx1]));
-	    duplicates.push_back(idx1);
+	    duplicates.push_back(t_genPt[idx1]);
 	  }
 	}
 	if(abs(t_genPdg[idx1])==431){ //do Ds
@@ -238,7 +238,7 @@ vector<int> hasDDecay(int idx1, vector<int> DMesons, vector<int> duplicates, int
 	  if(t_nDaughters[idx1]==2 && ((abs(t_genPdg[t_daughterIdx[idx1][0]])==323 && abs(t_genPdg[t_daughterIdx[idx1][1]])==311) || (abs(t_genPdg[t_daughterIdx[idx1][0]])==211 && abs(t_genPdg[t_daughterIdx[idx1][1]])==333)) ){
 	    // cout << "Ds found!" << endl;
 	    DMesons.push_back(abs(t_genPdg[idx1]));
-	    duplicates.push_back(idx1);
+	    duplicates.push_back(t_genPt[idx1]);
 	  }
 	}
       }
@@ -251,7 +251,7 @@ vector<int> hasDDecay(int idx1, vector<int> DMesons, vector<int> duplicates, int
     if(t_daughterIdx[idx1][idaught] != idx1 && t_daughterIdx[idx1][idaught]>0){
       int idx2 = t_daughterIdx[idx1][idaught];
       
-      DMesons = hasDDecay(idx2, DMesons, duplicates, t_nDaughters, t_genPdg, t_daughterIdx, hashadronicDecay);
+      DMesons = hasDDecay(idx2, DMesons, duplicates, t_nDaughters, t_genPdg, t_daughterIdx, t_genPt, hashadronicDecay);
     }
     //cout << "check on return idx: "<< DMesons << endl;
   }
@@ -335,7 +335,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   float t_refpt[100];
   hfcand_v0* hfcandidate = new hfcand_v0;
 
-  vector<double> dCandPt, dCandMass, dCandEta, dCandPhi, dCandDr, dCandChildMass, dCandType, dCandCharge1, dCandCharge2;
+  vector<double> dGenPt, dCandPt, dCandMass, dCandEta, dCandPhi, dCandDr, dCandChildMass, dCandType, dCandCharge1, dCandCharge2;
   vector<double> dCandMatchGenPt_dau2, dCandMatchGenEta_dau2, dCandMatchGenPhi_dau2;
   vector<int> dCandMatchGenPdg_dau2, dCandMatchGenSubid_dau2;
   vector<double> dCandMatchGenPt_index1, dCandMatchGenEta_index1, dCandMatchGenPhi_index1;
@@ -393,6 +393,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   ct->Branch("muSum",&muSum);
   ct->Branch("eSum",&eSum);*/
 
+  ct->Branch("dGenPt",&dGenPt);
   ct->Branch("dCandPt",&dCandPt);
   ct->Branch("dCandMass",&dCandMass);
   ct->Branch("dCandEta",&dCandEta);
@@ -553,6 +554,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
       HltTree->GetEntry(ientry);
       //HltRerun->GetEntry(ientry);
       skimTree->GetEntry(ientry);
+      genTree->GetEntry(ientry);
 
       if(!isMC){
 //	if(!pHBHENoiseFilter || !pprimaryvertexFilter || !pPAcollisionEventSelectionPA) continue;
@@ -623,11 +625,13 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 	  if(isMC) subid.push_back(t_subid[ijet]);
 	  if(isMC) genMatch.push_back(t_genMatch[ijet]);
 	  if(isMC){
-	    vector<int> t_hasGenD, dummy;
-	    vector<int> t_hasGenDwithKpi, dummy2;
+	    vector<int> t_hasGenD;
+	    vector<double> genPts, dummy2;
+	    vector<int> t_hasGenDwithKpi;
 	    int Dcands=0, DcandsWithKpi=0;
-	    t_hasGenD = hasDDecay(t_genMatch[ijet], t_hasGenD, dummy, t_nDaughters, t_genPdg, t_daughterIdx,0);
-	    t_hasGenDwithKpi = hasDDecay(t_genMatch[ijet], t_hasGenDwithKpi, dummy2, t_nDaughters, t_genPdg, t_daughterIdx,1);
+	    t_hasGenD = hasDDecay(t_genMatch[ijet], t_hasGenD, genPts, t_nDaughters, t_genPdg, t_daughterIdx, t_genpt, 0);
+	    t_hasGenDwithKpi = hasDDecay(t_genMatch[ijet], t_hasGenDwithKpi, dummy2, t_nDaughters, t_genPdg, t_daughterIdx, t_genpt, 1);
+	    dGenPt = genPts;
 	    // cout << "hasGenDwithKpi" << endl;
 	    for(unsigned iii=0; iii<t_hasGenDwithKpi.size(); iii++){
 	      //cout << t_hasGenDwithKpi.at(iii) << " ";
@@ -666,11 +670,13 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 	  muSum.push_back(t_muSum[ijet]);*/
 	}
       }
+      //cout << "event: "<< ientry << " ncandidates: "<< hfcandidate->get_nhfcand() << endl;
       for(int icand=0; icand<hfcandidate->get_nhfcand(); icand++){
-	
+
 	snglhfcand* cand = hfcandidate->get_hfcand(icand);
 	
-	if((!isMC && passDSelections(cand)) || isMC){
+	if(passDSelections(cand)){
+	  // cout << "candidate number: "<< icand << ", pt: " << cand->get_fpt() << endl;
 	  dCandPt.push_back(cand->get_fpt());
 	  dCandMass.push_back(cand->get_fm());
 	  dCandEta.push_back(cand->get_feta());
@@ -682,10 +688,11 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 	  dCandCharge2.push_back(cand->get_fpt2()); //bug in producer code!!
 	  if(isMC){
 	    int pb = findGenD0(cand, t_genPdg, t_nMothers, t_motherIdx, t_nDaughters);
-	    //if(pb !=-999) cout << "pushing back " << pb << endl;
+	    //if(pb !=-999){ cout << "candidate instance: "<< icand << " pushing back " << pb << endl;
+	    //   cout << "candidate pt: "<< cand->get_fpt() << endl;
+	    // }
 	    dCandGenMatchPdg.push_back(pb);
 	    
-	    genTree->GetEntry(ientry);
 	    int dau2_mom=0, idx1_mom=0, idx2_mom=0;
 	    
 	    //do soft particle daughter
