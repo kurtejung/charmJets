@@ -41,6 +41,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TCint.h"
+#include "TMath.h"
 //#include "tmva/test/TMVAGui.C"
 
 #if not defined(__CINT__) || defined(__MAKECINT__)
@@ -49,7 +50,7 @@
 #include "TMVA/Tools.h"
 #endif
 
-void TMVAClassification( TString myMethodList = "", int isMC=1)
+void TMVAClassification( TString myMethodList = "", int isMC=1, int useSvtx=1)
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -73,20 +74,20 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    // to get access to the GUI and all tmva macros
    TString thisdir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
    gROOT->SetMacroPath(thisdir + ":" + gROOT->GetMacroPath());
-   gROOT->ProcessLine(".L ../tmva/test/TMVAGui.C");
+   //gROOT->ProcessLine(".L /Users/kjung/root5-34-23/tmva/test/TMVAGui.C");
 
    // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
 
    // --- Cut optimisation
-   Use["Cuts"]            = 1;
-   Use["CutsD"]           = 1;
+   Use["Cuts"]            = 0;
+   Use["CutsD"]           = 0;
    Use["CutsPCA"]         = 0;
    Use["CutsGA"]          = 0;
    Use["CutsSA"]          = 0;
    // 
    // --- 1-dimensional likelihood ("naive Bayes estimator")
-   Use["Likelihood"]      = 1;
+   Use["Likelihood"]      = 0;
    Use["LikelihoodD"]     = 0; // the "D" extension indicates decorrelated input variables (see option strings)
    Use["LikelihoodPCA"]   = 0; // the "PCA" extension indicates PCA-transformed input variables (see option strings)
    Use["LikelihoodKDE"]   = 0;
@@ -101,9 +102,9 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    Use["KNN"]             = 0; // k-nearest neighbour method
    //
    // --- Linear Discriminant Analysis
-   Use["LD"]              = 1; // Linear Discriminant identical to Fisher
+   Use["LD"]              = 0; // Linear Discriminant identical to Fisher
    Use["Fisher"]          = 0;
-   Use["FisherG"]         = 1;
+   Use["FisherG"]         = 0;
    Use["BoostedFisher"]   = 0; // uses generalised MVA method boosting
    Use["HMatrix"]         = 0;
    //
@@ -116,7 +117,7 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    Use["FDA_MCMT"]        = 0;
    //
    // --- Neural Networks (all are feed-forward Multilayer Perceptrons)
-   Use["MLP"]             = 1; // Recommended ANN
+   Use["MLP"]             = 0; // Recommended ANN
    Use["MLPBFGS"]         = 0; // Recommended ANN with optional training method
    Use["MLPBNN"]          = 0; // Recommended ANN with BFGS training method and bayesian regulator
    Use["CFMlpANN"]        = 0; // Depreciated ANN from ALEPH
@@ -126,8 +127,8 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    Use["SVM"]             = 0;
    // 
    // --- Boosted Decision Trees
-   Use["BDT"]             = 1; // uses Adaptive Boost
-   Use["BDTG"]            = 0; // uses Gradient Boost
+   Use["BDT"]             = 0; // uses Adaptive Boost
+   Use["BDTG"]            = 1; // uses Gradient Boost
    Use["BDTB"]            = 0; // uses Bagging
    Use["BDTD"]            = 0; // decorrelation + Adaptive Boost
    Use["BDTF"]            = 0; // allow usage of fisher discriminant for node splitting 
@@ -163,8 +164,11 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
    TString outfileName;
+   string svtxExt = "noSvtx";
+   if(useSvtx) svtxExt = "withSvtx";
    if(!isMC) outfileName = "TMVA_trained_data.root";
-   else outfileName = "TMVA_trained_cJet.root";
+   else outfileName = Form("TMVA_trained_cJet_medDCuts_BvC_%s.root",svtxExt.c_str());
+   cout << "fn: "<< outfileName << endl;
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
    outputFile->cd();
 
@@ -190,51 +194,79 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
    //factory->AddVariable( "myvar1 := var1+var2", 'F' );
-   factory->AddVariable( "djetR", "Closest Meson to Jet dr", "", 'F' );
+
+   if(useSvtx) factory->AddVariable("svtxptFrac","svtx pt fraction","units",'F');
+   //factory->AddVariable( "djetR", "Closest Meson to Jet dr", "", 'F' );
    factory->AddVariable( "nIP","number of IP trks","units",'I');
+   if(useSvtx) factory->AddVariable( "svtxm", "svtx mass", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxmEnergyFrac","svtxmEnergyFrac","units",'F');
+   if(useSvtx) factory->AddVariable( "svtxpt", "svtx pt", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxmcorr", "corrected svtx mass", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxdl", "svtx displacement", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxdls", "svtx displacement significance", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxntrk", "svtx ntracks", "units", 'F');
+   if(useSvtx) factory->AddVariable( "sv2Trkdl", "2trk svtx close2PV dl", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxTrkSumChi2", "svtx trk sum chi2", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxTrkNetCharge", "svtx trk net chg", "units", 'F');
+   if(useSvtx) factory->AddVariable( "svtxNtrkInCone", "svtx ntrk in cone", "units", 'F');
+   //factory->AddVariable( "jteta",  "Jet eta", "units", 'F' );
+   factory->AddVariable( "closestDMass","Closest DMass", "units", 'F' );
+   factory->AddVariable( "closestDType","Closest Type","units",'F');
    factory->AddVariable( "closestDPt","Closest DpT", "units", 'F' );
-   factory->AddVariable( "svtxm", "svtx mass", "units", 'F');
-   factory->AddVariable( "svtxdl", "svtx displacement", "units", 'F');
-   factory->AddVariable( "svtxdls", "svtx displacement significance", "units", 'F');
-   factory->AddVariable( "svtxntrk", "svtx ntracks", "units", 'F');
-   factory->AddVariable( "jtpt",  "Jet pT", "units", 'F' );
-   factory->AddVariable( "chargedMax","chargedMax","units",'F');
+   /*factory->AddVariable( "chargedMax","chargedMax","units",'F');
    factory->AddVariable( "chargedSum","chargedSum","units",'F');
    factory->AddVariable( "neutralMax","neutralMax","units",'F');
    factory->AddVariable( "neutralSum","neutralSum","units",'F');
    factory->AddVariable( "photonMax","photonMax","units",'F');
    factory->AddVariable( "photonSum","photonSum","units",'F');
    factory->AddVariable( "eSum","eSum","units",'F');
-   factory->AddVariable( "muSum","muSum","units",'F');
-   factory->AddVariable( "trackIP2dSig","Sum(IP trk 2d sig)","units",'F');
-   factory->AddVariable( "trackIP3dSig","Sum(IP trk 3d sig)","units",'F');
-   factory->AddVariable( "trackIP2d","Sum(IP trk 2d)","units",'F');
-   factory->AddVariable( "trackIP3d","Sum(IP trk 3d)","units",'F');
-   factory->AddVariable( "ipProb0","Sum(prob0 IP)","units",'F');
-   factory->AddVariable( "ipPt","Sum(IP pt)","units",'F');
-   
+   factory->AddVariable( "muSum","muSum","units",'F');*/
+   for(int i=0; i<3; i++){
+     //factory->AddVariable( Form("ipProb0_%d",i),Form("prob0 IP part %d",i),"units",'F');
+     //factory->AddVariable( Form("ipPt_%d",i),Form("IP pt part %d",i),"units",'F');
+     factory->AddVariable( Form("trackIP2dSig_%d",i),Form("IP trk 2d sig part %d",i),"units",'F');
+     factory->AddVariable( Form("trackIP3dSig_%d",i),Form("IP trk 3d sig part %d",i),"units",'F');
+     factory->AddVariable( Form("trackIP2d_%d",i),Form("IP trk 2d part %d",i),"units",'F');
+     factory->AddVariable( Form("trackIP3d_%d",i),Form("IP trk 3d part %d",i),"units",'F');
+  }
+  for(int i=0; i<1; i++){
+     //factory->AddVariable( Form("trackPtRel_%d",i),Form("pt rel part %d",i),"units",'F');
+     //factory->AddVariable( Form("trackPPar_%d",i),Form("track ppar part %d",i),"units",'F');
+     //factory->AddVariable( Form("trackPParRatio_%d",i),Form("track ppar part %d",i),"units",'F');
+     factory->AddVariable( Form("trackJetDist_%d",i),Form("dist to jet part %d",i),"units",'F');
+     factory->AddVariable( Form("trackDecayLenVal_%d",i),Form("trk decay len part %d",i),"units",'F');
+     //factory->AddVariable( Form("trackDeltaR_%d",i),Form("trk dr to jet part %d",i),"units",'F');
+     //factory->AddVariable( Form("trackPtRatio_%d",i),Form("trk pt ratio part %d",i),"units",'F');
+   }
+   //factory->AddVariable( "trackSip2dSigAboveCharm","trackSip2dSigAboveCharm","units",'F');
+   //factory->AddVariable( "trackSip3dSigAboveCharm","trackSip3dSigAboveCharm","units",'F');
+   //factory->AddVariable( "trackSip2dValAboveCharm","trackSip2dValAboveCharm","units",'F');
+   //factory->AddVariable( "trackSip3dValAboveCharm","trackSip3dValAboveCharm","units",'F');
+   //factory->AddVariable( "svJetDeltaR","svJetDeltaR","units",'F');
+   factory->AddVariable( "trackSumJetDeltaR","trackSumJetDeltaR","units",'F');
+     
    // You can add so-called "Spectator variables", which are not used in the MVA training,
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the
    // input variables, the response values of all trained MVAs, and the spectator variables
    //factory->AddSpectator( "spec1 := var1*2",  "Spectator 1", "units", 'F' );
    
-   factory->AddSpectator( "jteta",  "Jet eta", "units", 'F' );
    if(isMC) factory->AddSpectator( "refpt",  "ref pT", "units", 'F' );
    factory->AddSpectator( "rawpt",  "raw pT", "units", 'F' );
    //factory->AddSpectator( "dCandPt", "D-Meson pT", "units" , 'F' );
    if(isMC) factory->AddSpectator( "refparton_flavorForB", "jet flavor", "units" , 'F' );
-   factory->AddSpectator( "evtSelection", "event selection", "units" , 'F' );
-   factory->AddSpectator( "vz", "z-vertex", "units" , 'F' );
-   if(isMC) factory->AddSpectator( "subid", "subid", "units" , 'F' );
-   factory->AddSpectator( "pthat", "pthat", "units" , 'F' );
-   factory->AddSpectator( "run", "run", "units" , 'I' );
-   factory->AddSpectator( "bin", "centrality", "units" , 'I' );
+   //factory->AddSpectator( "evtSelection", "event selection", "units" , 'F' );
+   //factory->AddSpectator( "vz", "z-vertex", "units" , 'F' );
+   //if(isMC) factory->AddSpectator( "subid", "subid", "units" , 'F' );
+   //factory->AddSpectator( "pthat", "pthat", "units" , 'F' );
+   //factory->AddSpectator( "run", "run", "units" , 'I' );
+   //factory->AddSpectator( "bin", "centrality", "units" , 'I' );
+   factory->AddSpectator( "jtpt",  "Jet pT", "units", 'F' );
    
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
    TString fname;
-   if(!isMC) fname = "/Users/kjung/charmJets/pPb/input/DMesonCJet_pPbData_ppReco_akPu3PF_convertToJetTree.root";
-   else fname = "/Users/kjung/charmJets/pPb/input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree.root";
+   if(!isMC) fname = "/Users/kjung/charmJets/pPb/input/DMesonCJet_pPbData_ppReco_akPu3PF_convertToJetTree_withLHCbVars_medDCuts.root";
+   else fname = "/Users/kjung/charmJets/pPb/input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_medDCuts.root";
    
    //if (gSystem->AccessPathName( fname ))  // file does not exist in local directory
    //   gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
@@ -245,8 +277,15 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    
    // --- Register the training and test trees
 
-   TTree *signal     = (TTree*)input->Get("jets");
-   TTree *background = (TTree*)input->Get("jets");
+   TTree *signal, *background;
+   if(useSvtx){
+      signal = (TTree*)input->Get("jets");
+      background = (TTree*)input->Get("jets");
+   }
+   else{
+      signal = (TTree*)input->Get("jetsNoSvtx");
+      background = (TTree*)input->Get("jetsNoSvtx");
+   }
 
    TTree *signal_2 = (TTree*)input->Get("dMesons");
    TTree *background_2 = (TTree*)input->Get("dMesons");
@@ -276,39 +315,50 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    //     Float_t  treevars[4], weight;
    //     
    //     // Signal
-   const int nvars = 27;
+   const int nvars = 35; //67;
+   const int nvarsWithInt = 2;
    double weight;
    std::vector<double> vars(nvars);
-   double treevars[nvars-2];
-   int treevars2[2];
-   std::string variables[nvars] = {"djetR","discr_ssvHighEff","discr_csvSimple","closestDPt","svtxm","svtxdl","jtpt","refpt","rawpt","refparton_flavorForB","svtxdls","chargedMax","chargedSum","neutralMax","neutralSum","photonMax","photonSum","eSum","muSum","trackIP2dSig","trackIP3dSig","trackIP2d","trackIP3d","ipProb0","ipPt","nIP","svtxntrk"};
+   double treevars[nvars-nvarsWithInt];
+   int treevars2[nvarsWithInt];
+   //std::string variables[nvars] = {"djetR","closestDPt","svtxm","svtxdl","jtpt","refpt","rawpt","refparton_flavorForB","svtxdls","trackIP2dSig_0","trackIP3dSig_0","trackIP2d_0","trackIP3d_0","ipProb0_0","trackPtRel_0","trackPPar_0","trackPParRatio_0","trackJetDist_0","trackDecayLenVal_0","trackDeltaR_0","trackPtRatio_0","ipPt_0","trackIP2dSig_1","trackIP3dSig_1","trackIP2d_1","trackIP3d_1","ipProb0_1","trackPtRel_1","trackPPar_1","trackPParRatio_1","trackJetDist_1","trackDecayLenVal_1","trackDeltaR_1","trackPtRatio_1","ipPt_1","trackIP2dSig_2","trackIP3dSig_2","trackIP2d_2","trackIP3d_2","ipProb0_2","trackPtRel_2","trackPPar_2","trackPParRatio_2","trackJetDist_2","trackDecayLenVal_2","trackDeltaR_2","trackPtRatio_2","ipPt_2","trackIP2dSig_3","trackIP3dSig_3","trackIP2d_3","trackIP3d_3","ipProb0_3","trackPtRel_3","trackPPar_3","trackPParRatio_3","trackJetDist_3","trackDecayLenVal_3","trackDeltaR_3","trackPtRatio_3","ipPt_3","trackSip2dValAboveCharm","trackSip3dValAboveCharm","svJetDeltaR","trackSumJetDeltaR","nIP","svtxntrk"};
+   
+   std::string variables[nvars] = {"jtpt","refpt","rawpt","refparton_flavorForB","svtxptFrac","svtxmEnergyFrac","svtxpt","svtxm",
+   "svtxdl","svtxdls","svtxTrkSumChi2","svtxTrkNetCharge","sv2Trkdl", "closestDMass","closestDType","closestDPt","trackIP2dSig_0","trackIP2dSig_1",
+"trackIP2dSig_2","trackIP3dSig_0","trackIP3dSig_1","trackIP3dSig_2","trackIP2d_0","trackIP2d_1",
+"trackIP2d_2","trackIP3d_0","trackIP3d_1","trackIP3d_2","trackJetDist_0","trackDecayLenVal_0","svJetDeltaR",
+"trackSumJetDeltaR","svtxNtrkInCone","svtxntrk","nIP"};
+
+   //std::string variables[nvars] = {"jtpt","refpt","rawpt","refparton_flavorForB","svtxptFrac","svtxdl","svtxdls","closestDPt","closestDType","closestDMass","svtxm","svtxmcorr","svJetDeltaR","trackSumJetDeltaR","svtxpt","sv2Trkdl","svtxTrkSumChi2","svtxTrkNetCharge","svtxNtrkInCone","svtxntrk"};
    signal->SetBranchAddress("weight", &weight);
 	
-   for (UInt_t ivar=0; ivar<nvars-2; ivar++) signal->SetBranchAddress( variables[ivar].c_str(), &(treevars[ivar]) );
-   for (UInt_t ivar=nvars-2; ivar<nvars; ivar++) signal->SetBranchAddress( variables[ivar].c_str(), &(treevars2[ivar]) );
+   for (UInt_t ivar=0; ivar<nvars-nvarsWithInt; ivar++) signal->SetBranchAddress( variables[ivar].c_str(), &(treevars[ivar]) );
+   for (UInt_t ivar=nvars-nvarsWithInt; ivar<nvars; ivar++) signal->SetBranchAddress( variables[ivar].c_str(), &(treevars2[ivar]) );
    for (UInt_t i=0; i<signal->GetEntries(); i++) {
      signal->GetEntry(i);
-     for (UInt_t ivar=0; ivar<nvars-2; ivar++) vars[ivar] = treevars[ivar];
+     for (UInt_t ivar=0; ivar<nvars-nvarsWithInt; ivar++) vars[ivar] = treevars[ivar];
+      for (UInt_t ivar=nvars-nvarsWithInt; ivar<nvars; ivar++) vars[ivar] = treevars2[ivar];
      // add training and test events; here: first half is training, second is testing
      // note that the weight can also be event-wise
      //for(int ij=0; ij<nvars; ij++) cout << ij << " " << vars[ij] << endl;
-     if(((isMC && abs(vars[9])==4 && vars[7]>20) || (!isMC && vars[0]<0.3 && vars[0]>0)) && vars[6]>20 && vars[8]>20){// && vars[6]>20){ //abs(refparton_flavorForB)==4 && jtpt>20
-       if (i < signal->GetEntries()/10.0) factory->AddSignalTrainingEvent( vars, weight );
+     if(isMC && (abs(vars[3])==4)) {
+       if (i%2==0)  factory->AddSignalTrainingEvent( vars, weight );
        else                              factory->AddSignalTestEvent    ( vars, weight );
      }
    }
    //   
    //     // Background (has event weights)
    background->SetBranchAddress( "weight", &weight );
-   for (UInt_t ivar=0; ivar<nvars-2; ivar++) background->SetBranchAddress( variables[ivar].c_str(), &(treevars[ivar]) );
-   for (UInt_t ivar=nvars-2; ivar<nvars; ivar++) background->SetBranchAddress( variables[ivar].c_str(), &(treevars2[ivar]) );
+   for (UInt_t ivar=0; ivar<nvars-nvarsWithInt; ivar++) background->SetBranchAddress( variables[ivar].c_str(), &(treevars[ivar]) );
+   for (UInt_t ivar=nvars-nvarsWithInt; ivar<nvars; ivar++) background->SetBranchAddress( variables[ivar].c_str(), &(treevars2[ivar]) );
    for (UInt_t i=0; i<background->GetEntries(); i++) {
      background->GetEntry(i);
-     for (UInt_t ivar=0; ivar<nvars; ivar++) vars[ivar] = treevars[ivar];
+     for (UInt_t ivar=0; ivar<nvars-nvarsWithInt; ivar++) vars[ivar] = treevars[ivar];
+      for (UInt_t ivar=nvars-nvarsWithInt; ivar<nvars; ivar++) vars[ivar] = treevars2[ivar];
      // add training and test events; here: first half is training, second is testing
      // note that the weight can also be event-wise
-     if(((isMC && abs(vars[9])!=4 && vars[7]>20) || (!isMC && (vars[0]>0.3 || vars[0]<0))) && vars[6]>20 && vars[8]>20){// && treevars[5]>20 && treevars[6]>20 && treevars[7]>20){
-       if (i < background->GetEntries()/10.0) factory->AddBackgroundTrainingEvent( vars, weight );
+     if(isMC && (abs(vars[3])==5)) {
+       if (i%2==0) factory->AddBackgroundTrainingEvent( vars, weight );
        else                                factory->AddBackgroundTestEvent    ( vars, weight );
      }
    }
@@ -491,8 +541,8 @@ void TMVAClassification( TString myMethodList = "", int isMC=1)
    // Boosted Decision Trees
    if (Use["BDTG"]) // Gradient Boost
       factory->BookMethod( TMVA::Types::kBDT, "BDTG",
-                           "!H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" );
-
+                           //"!H:!V:NTrees=850:MinNodeSize=2%:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2" );
+                           "!H:!V:NTrees=1000:BoostType=Grad:Shrinkage=0.05:UseBaggedBoost:GradBaggingFraction=0.9:SeparationType=GiniIndex:nCuts=500:MaxDepth=2" );
    if (Use["BDT"])  // Adaptive Boost
       factory->BookMethod( TMVA::Types::kBDT, "BDT",
                            "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
