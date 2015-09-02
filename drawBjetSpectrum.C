@@ -32,7 +32,7 @@ TH1* killZeroes(TH1* h1, double min){
   return hnew;
 }
 
-void drawBjetSpectrum(int pApp=0, int useUnfolded=0, int doInclusiveJet=0, float etalo=-2., float etahi=2., int centLo=0, int centHi=100){
+void drawBjetSpectrum(int pApp=1, int useUnfolded=1, int doInclusiveJet=0, float etalo=-2., float etahi=2., int centLo=0, int centHi=100){
 
   double TpAarr[4] = {6.9, 14.3, 10.2, 3.86};
   
@@ -57,13 +57,12 @@ void drawBjetSpectrum(int pApp=0, int useUnfolded=0, int doInclusiveJet=0, float
   if(pApp && doInclusiveJet) fin2 = new TFile(Form("output/ppMC_akPu3PF_InclJetForUnfolding_gsp0_eta%.1fTo%.1f.root",ppetalo,ppetahi));
   else if(pApp) fin2= new TFile(Form("output/ppMC_akPu3PF_cJet_matchBin0_gsp0_JPLT0.1_eta%.1fTo%.1f.root",ppetalo,ppetahi)); //pp (from MC)
   //else  fin2= new TFile("output/NewFormatV5_bFractionMCTemplate_pPbpp1_jetptcut30_SSVHEat2.0FixCL0_bin_0_40_eta_0_2.root"); //pA
-  
 
-  if(!useUnfolded) fin = new TFile(Form("output/cJetFitterV3_looseDCuts_fitToJP_officialMC_akPu3PF_FirstHalf_consistentEta_ssvhe20_addlJetCuts_fixBin_bFractionMCTemplate_pPbpp1_gsp0_jetptcut30_SvtxmCorr<2.5 && SSVHEat0.5_FixCL0_bin_0_100_eta_%.2f_%.2f.root",etalo,etahi));
+  if(!useUnfolded) fin = new TFile(Form("output/cJetFitterV3_looseDCuts_fitToJP_officialMC_akPu3PF_FirstHalf_consistentEta_ssvhe20_addlJetCuts_fixBin_bFractionMCTemplate_pPbpp1_gsp0_jetptcut30__nofilter_vsSvtxmCorrto10_SSVHPat1.7_FixCL0_bin_0_100_eta_%.2f_%.2f.root",etalo,etahi));
   else if(doInclusiveJet) fin = new TFile(Form("pPb_Unfo_akPu3PF_akPu3PF_noGplus_FirstHalf_jtpt30_Inc_clo0_chi100_v8_eta_%.1fTo%.1f_.root",etalo,etahi));
   else{
-    fin = new TFile(Form("pPb_Unfo_inCM_v31_officialMC_ak3PF_akPu3PF_noGplus_FirstHalfOnly_Converged_usedParameterizedUnfold0_jtpt35_bJets_clo%d_chi%d_v8_eta_%.2fTo%.2f_.root",centLo,centHi,etalo,etahi));
-    finRev = new TFile(Form("pPb_Unfo_inCM_v31_officialMC_Reverse_WithResCorr_ak3PF_akPu3PF_noGplus_SecondHalfOnly_Converged_usedParameterizedUnfold0_jtpt35_bJets_clo%d_chi%d_v8_eta_%.2fTo%.2f_.root",centLo,centHi,etalo,etahi));
+    fin = new TFile(Form("pPb_Unfo_inCM_v31_officialMC_ak3PF_akPu3PF_noGplus_FirstHalfOnly_Converged_usedParameterizedUnfold0_jtpt35_cJets_clo0_chi100_v8_eta_%.2fTo%.2f_.root",etalo,etahi));
+    finRev = new TFile(Form("pPb_Unfo_inCM_v31_officialMC_Reverse_WithResCorr_ak3PF_akPu3PF_noGplus_SecondHalfOnly_Converged_usedParameterizedUnfold0_jtpt35_cJets_clo0_chi100_v8_eta_%.2fTo%.2f_.root",etalo,etahi));
   }
 
   if(!fin){ cout << "file not found! " << endl; exit(0); }
@@ -83,9 +82,9 @@ void drawBjetSpectrum(int pApp=0, int useUnfolded=0, int doInclusiveJet=0, float
   }
   else{
     if(pApp) hRawBData = (TH1D*)fin->Get("hGen_cent1");
-    else hRawBData = (TH1D*)fin->Get("hReco0");
+    else hRawBData = (TH1D*)fin->Get("hRecoRooUnfold0");
     //if(pApp) hRawBDataRev = (TH1D*)finRev->Get("hGen_cent1");
-    if(!pApp) hRawBDataRev = (TH1D*)finRev->Get("hReco0");
+    if(!pApp) hRawBDataRev = (TH1D*)finRev->Get("hRecoRooUnfold0");
     if(!pApp) hRawpp = (TH1D*)fin->Get("hGen_cent1");
   }
 
@@ -99,7 +98,8 @@ void drawBjetSpectrum(int pApp=0, int useUnfolded=0, int doInclusiveJet=0, float
   // divide out the bin-width
   double val1,err1,width1;
   //double selectionEff[3] = {0.01836,0.0396,0.0665}; //tight cuts, no DR
-  double selectionEff[3] = {0.009, 0.02, 0.033}; //tight cuts, with DR
+  //double selectionEff[3] = {0.0271, 0.0286, 0.0293}; //ssvhp prefilter
+  double selectionEff[3] = {0.98,0.99,0.99};
   if(!useUnfolded || pApp){
     for(int i=0;i<hRawBData->GetNbinsX();i++){
       val1 =     hRawBData->GetBinContent(i+1);
@@ -121,6 +121,11 @@ void drawBjetSpectrum(int pApp=0, int useUnfolded=0, int doInclusiveJet=0, float
     TH1D *hBEfficiency = (TH1D*)fin->Get("hBEfficiencyMC");
     hRawBData->Divide(hBEfficiency);
   }
+
+  TH1D *JPconversion = (TH1D*)fin->Get("hBFractionJPdirect");
+  TH1D *dataFrac = (TH1D*)fin->Get("hBFractionDataLTJP");
+  //hRawBData->Multiply(JPconversion);
+  //hRawBData->Divide(dataFrac);
   
   //eff corrections taken care of in unfolding
   /* if((!doInclusiveJet && !useUnfolded && !pApp)) {//|| (pApp && !doInclusiveJet)){
@@ -192,15 +197,15 @@ void drawBjetSpectrum(int pApp=0, int useUnfolded=0, int doInclusiveJet=0, float
   }
   else{
     if(doInclusiveJet) fout = new TFile(Form("inputToRAA/raa_pPb_numerator-inc_eta%.1fTo%.1f.root",etalo,etahi),"recreate");
-    else fout = new TFile(Form("inputToRAA/raa_pPb_numerator-Cjet_FirstHalfDataset_ssvhe0_svtxcorrLT2p5_etaCM_v2_bin%d_%d_eta%.1fTo%.1f.root",centLo,centHi,etalo,etahi),"recreate");
+    else fout = new TFile(Form("inputToRAA/raa_pPb_numerator-Cjet_FirstHalfDataset_testRebin_ssvhe0_svtxcorrLT2p5_etaCM_v2_bin%d_%d_eta%.1fTo%.1f.root",centLo,centHi,etalo,etahi),"recreate");
     fout->cd();
     int arrnum=-1;
     if(centLo==0 && centHi==100) arrnum = 0;
     else if(centLo==0) arrnum = 1;
     if(centLo==20) arrnum = 2;
     if(centLo==50) arrnum = 3;
-    cout << "TpA correction: " << TpAarr[arrnum] << endl;
-    hRawBData->Scale(70./(35.03E9*2110E-3*0.85*TpAarr[arrnum]));//scale by lumi (35 nb^-1) and cross-section (2110 mb) and account for evt selection (0.85) and svtxmcorr<2.5
+    cout << "TpA correction: " << TpAarr[arrnum] << endl; //35.03E9
+    hRawBData->Scale(70./(20.93E9*2110E-3*0.85*TpAarr[arrnum]));//scale by lumi (35 nb^-1) and cross-section (2110 mb) and account for evt selection (0.85) and svtxmcorr<2.5
     //hRawBData->Scale(1./0.01865); //scale to account for D-candidate selections
     
     //hRawBData->Scale(1./(35.092E9*2110E-3*0.85*TpAarr[arrnum])); //full dataset
