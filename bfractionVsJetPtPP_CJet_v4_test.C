@@ -149,20 +149,21 @@ Enumerations count(double ptMin, double ptMax);
 //double ptBin[nBins+1] = {40, 55, 70, 100, 140, 250, 400};
 const int nBins = 6;
 double ptBin[nBins+1] = {40,55,80,120,170,250,400}; //{40,55,80,120,170,250,400}; //40,55,90...
-//const int nBins = 2;
-//double ptBin[nBins+1] = {40,100,250};
+//const int nBins = 1;
+//double ptBin[nBins+1] = {55,80};
 
 TH1D *significance = new TH1D("significance","",nBins,ptBin);
 
 
 //** WARNING! You need to make pPb = false when ppPA is true, else you'll get no counts (since pp run>211300)!! **//
+// UPDATE 9-17 - no need to separate forward/reverse directions! Including all data stats...
 const bool pPb = true;
 const bool ppPA = false;
 
 ///XXXX
 void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", double workingPoint=1.68, int fixCL=0, 
-  std::string taggerName="_nofilter_vsSvtxm_SSVHP_", int cbinlo=0, int cbinhi=100, float etalo=-2.0, float etahi=2.0, 
-  bool useDataBGtemplate = false, bool verbose = true, int gsp=3, bool doCMshift=false, bool doSSVCut=false, 
+  std::string taggerName="_nofilter_vsSvtxmCorr_SSVHP", int cbinlo=0, int cbinhi=100, float etalo=-2.0, float etahi=2.0, 
+  bool useDataBGtemplate = false, bool verbose = true, int gsp=0, bool doCMshift=false, bool doSSVCut=false, 
   bool doCSVCut=false, bool doJPCut=false, bool doDRcut=false) {
 
   if(useDataBGtemplate) fixCL=0;
@@ -170,11 +171,11 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
   if(pPb) std::cout << "CHECK ME! Using pPb selections! " << std::endl;
   else std::cout << "CHECK ME! Using Pbp selections! "<< std::endl;
 
-  if(doCMshift){
+  if(doCMshift && !ppPA){
     std::cout << "CHECK ME! shifting back to lab eta!!" << std::endl;
     if(pPb){
-      etalo-=0.465;
-      etahi-=0.465;
+      etalo+=0.465;
+      etahi+=0.465;
     }
     else{
       etalo+=0.465;
@@ -234,9 +235,9 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
   }
   else if(pPb){
     if(gsp==0){
-      fQCDMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root"); 
-      fBMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root"); 
-      fCMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root"); 
+      fQCDMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_gsp0_convertToJetTree_noCuts_noShift_noReweight.root"); 
+      fBMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_gsp0_convertToJetTree_noCuts_noShift_noReweight.root"); 
+      fCMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_gsp0_convertToJetTree_noCuts_noShift_noReweight.root"); 
       //fdata = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root");
       fdata = new TFile("input/DMesonCJet_pPbData_ppReco_akPu3PF_convertToJetTree_withLHCbVars_noCuts.root");
     }
@@ -257,9 +258,9 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
     //fQCDMC = new TFile("histos/pPbMC_ppReco_akPu3PF_QCDjetTrig_etashift_noTrgSelection_MCWeightFinalWithSmoothedVzCentWeight_VzCut_FixWeight_8.root"); 
     //fBMC = new TFile("histos/pPbMC_ppReco_akPu3PF_QCDjetTrig_etashift_noTrgSelection_MCWeightFinalWithSmoothedVzCentWeight_BGenJets1.root"); 
     //fCMC = new TFile("histos/pPbMC_ppReco_akPu3PF_CjetTrig_etashift_noTrgSelection_MCWeightFinalWithSmoothedVzCentWeight_CGenJets_1.root");
-    fQCDMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root"); 
-    fBMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root"); 
-    fCMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root"); 
+    fQCDMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_gsp0_convertToJetTree_noCuts_noShift_noReweight.root"); 
+    fBMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_gsp0_convertToJetTree_noCuts_noShift_noReweight.root"); 
+    fCMC = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_gsp0_convertToJetTree_noCuts_noShift_noReweight.root"); 
       //fdata = new TFile("input/DMesonCJet_QCDJetOnly_pPbMC_ppReco_akPu3PF_convertToJetTree_noCuts.root");
     fdata = new TFile("input/DMesonCJet_pPbData_ppReco_akPu3PF_convertToJetTree_withLHCbVars_noCuts.root");
   }
@@ -341,6 +342,7 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
   
   TH1D *hBPurityData = new TH1D("hBPurityData","hBPurityData;Jet p_{T} (GeV/c);c-Tagging purity",nBins,ptBin);
   TH1D *hBPurityMC = new TH1D("hBPurityMC","hBPurityMC;Jet p_{T} (GeV/c);c-Tagging purity",nBins,ptBin);
+  TH1D *hBPurityJP = new TH1D("hBPurityJP","hBPurityJP;Jet p_{T} (GeV/c);c-Tagging purity",nBins,ptBin);
   TH1D *hRawBData = new TH1D("hRawBData","hRawBData;Jet p_{T} (GeV/c);raw c-jets",nBins,ptBin);
   TH1D *hRawBMC = new TH1D("hRawBMC","hRawBMC;Jet p_{T} (GeV/c);raw c-jets",nBins,ptBin);
 
@@ -461,7 +463,9 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
     hBPurityMC->SetBinContent(n+1,bPurMC); 
     hBPurityMC->SetBinError(n+1,bPurMCError); 
     hBPurityData->SetBinContent(n+1,bPurData);    
-    hBPurityData->SetBinError(n+1,bPurDataError); 
+    hBPurityData->SetBinError(n+1,bPurDataError);
+    hBPurityJP->SetBinContent(n+1,fitJpTag->getVal());
+    hBPurityJP->SetBinError(n+1,fitJpTag->getError());
     hRawBData->SetBinContent(n+1,bPurData*numbers.nTaggedJetsData);
     hRawBData->SetBinError(n+1,bPurDataError*numbers.nTaggedJetsData);
     hRawBMC->SetBinContent(n+1,bPurMC*numbers.nTaggedJetsData);
@@ -550,6 +554,7 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
       cout<<"bPurMC "<<bPurMC<<endl;
       cout<<"bPurData "<<bPurData<<endl;
       cout<<"bPurDataErr"<<bPurDataError<<endl;
+      cout<<"bPurJPTag"<<fitJpTag->getVal()<<endl;
       cout<<"bEffMC "<<bEffMC<<endl;
       cout<<"CbForJP "<<numbers.cbForJP<<endl;
       cout<<"bEffDataLTJP "<<bEffDataLTJP<<endl;
@@ -588,7 +593,10 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
   hBPurityData->SetMarkerColor(1);
   hBPurityData->SetMarkerStyle(20);
   hBPurityData->SetMarkerSize(1.41);
-  hBPurityData->Draw("same");   
+  hBPurityData->Draw("same");
+  hBPurityJP->SetMarkerColor(4);
+  hBPurityJP->SetMarkerSize(1.41);
+  hBPurityJP->Draw("same");
   legPur->Draw();
   //cBPurity->SaveAs("ssvhePurpPb.pdf");
   
@@ -696,8 +704,8 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
   if(ppPA) fout = new TFile(Form("output/pp2p76_NewFormatV11_ak3PF_fixBin_bFraction%sTemplate_pPbpp1_gsp%d_jetptcut30_%sat%.1fFixCL%d_bin_%d_%d_eta_%d_%d.root",mcDataString.c_str(),gsp,taggerName.c_str(),workingPoint,fixCL,cbinlo,cbinhi,(int)etalo,(int)etahi),"recreate");
 
   else{
-    if(pPb) fout = new TFile(Form("output/cJetFitterV3_looseDCuts_fitToJP_officialMC_akPu3PF_FirstHalf_consistentEta_ssvhe20_addlJetCuts_fixBin_bFraction%sTemplate_pPbpp1_gsp%d_jetptcut30_%sat%.1f%s_FixCL%d_bin_%d_%d_eta_%.2f_%.2f.root",mcDataString.c_str(),gsp,taggerName.c_str(),workingPoint,extraFits.c_str(),fixCL,cbinlo,cbinhi,etalo,etahi),"recreate");
-    else fout = new TFile(Form("output/cJetFitterV3_fitToJP_officialMC_akPu3PF_SecondHalfDataWithpPbMC_JPRetrain_v17JEC_consistentEta_ssvhe20_addlJetCuts_fixBin_bFraction%sTemplate_pPbpp1_gsp%d_jetptcut30_%sat%.1fFixCL%d_bin_%d_%d_eta_%.2f_%.2f.root",mcDataString.c_str(),gsp,taggerName.c_str(),workingPoint,fixCL,cbinlo,cbinhi,etalo,etahi),"recreate");
+    if(pPb) fout = new TFile(Form("output/cJetFitterV3_looseDCuts_fitToJP_officialMC_akPu3PF_Full_consistentEta_ssvhe20_addlJetCuts_fixBin_bFraction%sTemplate_pPbpp1_gsp%d_jetptcut30_%sat%.1f%s_FixCL%d_CMshift%d_bin_%d_%d_eta_%.2f_%.2f.root",mcDataString.c_str(),gsp,taggerName.c_str(),workingPoint,extraFits.c_str(),fixCL,doCMshift,cbinlo,cbinhi,etalo,etahi),"recreate");
+    else fout = new TFile(Form("output/cJetFitterV3_fitToJP_officialMC_akPu3PF_SecondHalfDataWithpPbMC_JPRetrain_v17JEC_consistentEta_ssvhe20_addlJetCuts_fixBin_bFraction%sTemplate_pPbpp1_gsp%d_jetptcut30_%sat%.1fFixCL%d_CMshift%d_bin_%d_%d_eta_%.2f_%.2f.root",mcDataString.c_str(),gsp,taggerName.c_str(),workingPoint,fixCL,doCMshift,cbinlo,cbinhi,etalo,etahi),"recreate");
   }
   
   hBFractionMC->Write();
@@ -707,6 +715,7 @@ void bfractionVsJetPtPP_CJet_v4_test(std::string tagger="discr_ssvHighPur", doub
   hBFractionJPdirect->Write();
   hBPurityMC->Write();
   hBPurityData->Write();
+  if (doLTJP) hBPurityJP->Write();
   hRawBMC->Write();
   hRawBData->Write();
   hBEfficiencyMC->Write();
@@ -777,7 +786,7 @@ RooRealVar *bfractionFit(parameters p, std::string var, std::string discr, doubl
   // muptrel : from (0) 0 to 5
   
   int nhistBins=10; //30 (10 is nominal!)
-  if(var=="svtxmcorr") nhistBins=10;
+  if(var=="svtxmcorr") nhistBins=12;
 
   double ptHatMin = 0.;
   if(ptMin>=80.&&ptMin<200.) ptHatMin = 20.;
@@ -808,7 +817,7 @@ RooRealVar *bfractionFit(parameters p, std::string var, std::string discr, doubl
     TH1D *htmp = new TH1D("htmp","htmp",nhistBins,minXvar,maxXvar);
     tQCDMC->Draw(Form("%s>>htmp",var.c_str()),Form("weight*(discr_ssvHighEff>3.0&&jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&bin>=%d&&bin<%d&&jteta>=%f&&jteta<%f&& evtSelection && abs(vz)<15&&run<211300&&discr_ssvHighEff>%f&&discr_csvSimple<=%f&&djetR<=%f)",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,cbinlo,cbinhi,etalo,etahi,ssvCut,csvCut,drCut));
     if(pPb){
-      tdata->Draw(Form("%s>>hB",var.c_str()),Form("weight*(discr_ssvHighEff>3.0&&jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&bin>=%d&&bin<%d&&jteta>=%f&&jteta<%f&& evtSelection && abs(vz)<15&&run<211300&&discr_ssvHighEff>%f&&discr_csvSimple<=%f&&djetR<=%f)",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,cbinlo,cbinhi,etalo,etahi,ssvCut,csvCut,drCut));
+      tdata->Draw(Form("%s>>hB",var.c_str()),Form("weight*(discr_ssvHighEff>3.0&&jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&bin>=%d&&bin<%d&&jteta>=%f&&jteta<%f&& evtSelection && abs(vz)<15&&discr_ssvHighEff>%f&&discr_csvSimple<=%f&&djetR<=%f)",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,cbinlo,cbinhi,etalo,etahi,ssvCut,csvCut,drCut));
     }
     else{
       tdata->Draw(Form("%s>>hB",var.c_str()),Form("weight*(discr_ssvHighEff>3.0&&jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&bin>=%d&&bin<%d&&jteta>=%f&&jteta<%f&& evtSelection && abs(vz)<15&&run>211300&&discr_ssvHighEff>%f&&discr_csvSimple<=%f&&djetR<=%f)",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,cbinlo,cbinhi,etalo,etahi,ssvCut,csvCut,drCut));
@@ -908,7 +917,7 @@ RooRealVar *bfractionFit(parameters p, std::string var, std::string discr, doubl
   }*/
 
   if(pPb){
-    data = new  RooDataSet("data","data",tdata,RooArgSet(s,jtpt,jteta,discriminator,weight,run),Form("jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&jteta>%f&&jteta<%f&&%s>=%f&&%s<=%f&&run<211300",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,etalo,etahi,var.c_str(),minXvar,var.c_str(),maxXvar),"weight");
+    data = new  RooDataSet("data","data",tdata,RooArgSet(s,jtpt,jteta,discriminator,weight,run),Form("jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&jteta>%f&&jteta<%f&&%s>=%f&&%s<=%f",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,etalo,etahi,var.c_str(),minXvar,var.c_str(),maxXvar),"weight");
   }
   else{
     data = new  RooDataSet("data","data",tdata,RooArgSet(s,jtpt,jteta,discriminator,weight,run),Form("jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&jteta>%f&&jteta<%f&&%s>=%f&&%s<=%f&&run>211300",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,etalo,etahi,var.c_str(),minXvar,var.c_str(),maxXvar),"weight");
@@ -1023,7 +1032,7 @@ RooRealVar *bfractionFit(parameters p, std::string var, std::string discr, doubl
   */
 
   if(pPb){
-    tdata->Draw(Form("%s>>hData_%d",var.c_str(),counter),Form("weight*(jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&jteta>%f&&jteta<%f&&evtSelection&&abs(vz)<15&&run<211300 && discr_ssvHighEff>%f&&discr_csvSimple<=%f&&djetR<=%f)",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,etalo,etahi,ssvCut,csvCut,drCut),"goff");
+    tdata->Draw(Form("%s>>hData_%d",var.c_str(),counter),Form("weight*(jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&jteta>%f&&jteta<%f&&evtSelection&&abs(vz)<15 && discr_ssvHighEff>%f&&discr_csvSimple<=%f&&djetR<=%f)",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,etalo,etahi,ssvCut,csvCut,drCut),"goff");
   }
   else{
     tdata->Draw(Form("%s>>hData_%d",var.c_str(),counter),Form("weight*(jtpt>=%f&&jtpt<%f&&%s>=%f&&%s<=%f&&jteta>%f&&jteta<%f&&evtSelection&&abs(vz)<15&&run>211300 && discr_ssvHighEff>%f&&discr_csvSimple<=%f&&djetR<=%f)",ptMin,ptMax,discr.c_str(),minXdiscr,discr.c_str(),maxXdiscr,etalo,etahi,ssvCut,csvCut,drCut),"goff");
@@ -1236,8 +1245,9 @@ RooRealVar *bfractionFit(parameters p, std::string var, std::string discr, doubl
   //drawText(Form("#chi^{2}/NDF = %3.1f / %d",chi2NDF,nXbins-1),0.53,0.55);
   //drawText(Form("#chi^{2}/NDF = %3.1f / %d",chi2,(int)(chi2/chi2NDF)),0.632,0.615);
   drawText("CMS Preliminary",0.17,0.965);
-  drawText("#sqrt{s_{NN}} = 5.02 TeV",0.70,0.965);
-  drawText(Form("%.1f<#eta<%.1f",etalo,etahi),0.2,0.88);
+  if(ppPA) drawText("#sqrt{s_{NN}} = 2.76 TeV",0.70,0.965);
+  else drawText("#sqrt{s_{NN}} = 5.02 TeV",0.70,0.965);
+  drawText(Form("%.1f<#eta_{lab}<%.1f",etalo,etahi),0.2,0.88);
   if(comment!="c-tagged sample (SSVHE > 2)") drawText(comment,0.18,0.80);
   if(comment=="c-tagged sample (SSVHE > 2)"){
     //drawText("c-tagged sample",0.18,0.80);
@@ -1304,16 +1314,16 @@ RooRealVar *bfractionFit(parameters p, std::string var, std::string discr, doubl
   
   if (var =="svtxm" || var == "discr_prob" || var == "svtxmcorr"){
     if(ppPA){
-      if (printEach) can1[counter]->Print(Form("output/PDFS/fitpp2p76_etaCM_bin%d_eta%.1fto%.1f_var_%sGT%d_%s_%d.pdf",cbinlo,etalo,etahi,varLabel.c_str(),(int)minXvar,fixCLlabel.c_str(),(int)ptMin),"pdf");
-      if (printEach) can1[counter]->Print(Form("output/MACROS/fitpp2p76_etaCM_bin%d_eta%.1fto%.1f_%s_%d%s_%d.C",cbinlo,etalo,etahi,varLabel.c_str(),(int)minXdiscr,fixCLlabel.c_str(),(int)ptMin),"cxx");  
+      if (printEach) can1[counter]->Print(Form("output/PDFS/fitpp2p76_etaCM_bin%d_eta%.1fto%.1f_var_%sGT%g_%s_%d.pdf",cbinlo,etalo,etahi,varLabel.c_str(),minXvar,fixCLlabel.c_str(),(int)ptMin),"pdf");
+      if (printEach) can1[counter]->Print(Form("output/MACROS/fitpp2p76_etaCM_bin%d_eta%.1fto%.1f_%s_%g%s_%d.C",cbinlo,etalo,etahi,varLabel.c_str(),minXdiscr,fixCLlabel.c_str(),(int)ptMin),"cxx");  
     }
     else if(pPb){
-      if (printEach) can1[counter]->Print(Form("output/PDFS/fitpPb_etaCM_bin%d_eta%.1fto%.1f_var_%sGT%d_%s_%d.pdf",cbinlo,etalo,etahi,varLabel.c_str(),(int)minXvar,fixCLlabel.c_str(),(int)ptMin),"pdf");
-      if (printEach) can1[counter]->Print(Form("output/MACROS/fitpPb_etaCM_bin%d_eta%.1fto%.1f_%s_%d%s_%d.C",cbinlo,etalo,etahi,varLabel.c_str(),(int)minXdiscr,fixCLlabel.c_str(),(int)ptMin),"cxx");  
+      if (printEach) can1[counter]->Print(Form("output/PDFS/fitpPb_etaCM_bin%d_eta%.1fto%.1f_var_%sGT%g_%s_%d.pdf",cbinlo,etalo,etahi,varLabel.c_str(),minXvar,fixCLlabel.c_str(),(int)ptMin),"pdf");
+      if (printEach) can1[counter]->Print(Form("output/MACROS/fitpPb_etaCM_bin%d_eta%.1fto%.1f_%s_%g%s_%d.C",cbinlo,etalo,etahi,varLabel.c_str(),minXdiscr,fixCLlabel.c_str(),(int)ptMin),"cxx");  
     }
     else{
-      if (printEach) can1[counter]->Print(Form("output/PDFS/fitPbp_etaCM_bin%d_eta%.1fto%.1f_var_%sGT%d_%s_%d.pdf",cbinlo,etalo,etahi,varLabel.c_str(),(int)minXvar,fixCLlabel.c_str(),(int)ptMin),"pdf");
-      if (printEach) can1[counter]->Print(Form("output/MACROS/fitPbp_etaCM_bin%d_eta%.1fto%.1f_%s_%d%s_%d.C",cbinlo,etalo,etahi,varLabel.c_str(),(int)minXdiscr,fixCLlabel.c_str(),(int)ptMin),"cxx");  
+      if (printEach) can1[counter]->Print(Form("output/PDFS/fitPbp_etaCM_bin%d_eta%.1fto%.1f_var_%sGT%g_%s_%d.pdf",cbinlo,etalo,etahi,varLabel.c_str(),minXvar,fixCLlabel.c_str(),(int)ptMin),"pdf");
+      if (printEach) can1[counter]->Print(Form("output/MACROS/fitPbp_etaCM_bin%d_eta%.1fto%.1f_%s_%g%s_%d.C",cbinlo,etalo,etahi,varLabel.c_str(),minXdiscr,fixCLlabel.c_str(),(int)ptMin),"cxx");  
     }
   }
   
@@ -1443,17 +1453,17 @@ void fillCounterHistos(std::string discr, double minWorkingPoint, double maxWork
 
   hUntaggedLJetsMC = new TH1D("hUntaggedLJetsMC","hUntaggedLJetsMC",nBins,ptBin);
   hUntaggedLJetsMC->Sumw2();
-  tQCDMC->Draw("jtpt>>hUntaggedLJetsMC",Form("weight*((%s<%f || %s>%f || discr_ssvHighEff<=%f || discr_csvSimple>%f || discr_prob>%f || djetR>%f )&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)!=4&&abs(refparton_flavorForB)!=5&&subid==0 && abs(vz)<15 && refpt>20)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,ssvCut,csvCut,jpCut,drCut,cbinlo,cbinhi,etalo,etahi));
+  tQCDMC->Draw("jtpt>>hUntaggedLJetsMC",Form("weight*(bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)!=4&&abs(refparton_flavorForB)!=5&&subid==0 && abs(vz)<15 && refpt>20)",cbinlo,cbinhi,etalo,etahi));
 
   hUntaggedCJetsMC = new TH1D("hUntaggedCJetsMC","hUntaggedCJetsMC",nBins,ptBin);
   hUntaggedCJetsMC->Sumw2();
-  tCMC->Draw("jtpt>>hUntaggedCJetsMC",Form("weight*((%s<%f || %s>%f || discr_ssvHighEff<=%f || discr_csvSimple>%f || discr_prob>%f || djetR>%f )&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)==4&&subid==0 && abs(vz)<15 && refpt>20)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,ssvCut,csvCut,jpCut,drCut,cbinlo,cbinhi,etalo,etahi));
+  tCMC->Draw("jtpt>>hUntaggedCJetsMC",Form("weight*(bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)==4&&subid==0 && abs(vz)<15 && refpt>20)",cbinlo,cbinhi,etalo,etahi));
 
-  cout << "untagged c-jet MC: "<< Form("weight*((%s<%f || %s>%f || discr_ssvHighEff<=%f || discr_csvSimple>%f || discr_prob>%f || djetR>%f )&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)==4&&subid==0 && abs(vz)<15 && refpt>20)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,ssvCut,csvCut,jpCut,drCut,cbinlo,cbinhi,etalo,etahi) << endl;
+  cout << "untagged c-jet MC: "<< Form("weight*(bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)==4&&subid==0 && abs(vz)<15 && refpt>20)",cbinlo,cbinhi,etalo,etahi) << endl;
   
   hUntaggedBJetsMC = new TH1D("hUntaggedBJetsMC","hUntaggedBJetsMC",nBins,ptBin);
   hUntaggedBJetsMC->Sumw2();
-  tBMC->Draw("jtpt>>hUntaggedBJetsMC",Form("weight*((%s<%f || %s>%f || discr_ssvHighEff<=%f || discr_csvSimple>%f || discr_prob>%f || djetR>%f )&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)==5&&subid==0 && abs(vz)<15 && refpt>20)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,ssvCut,csvCut,jpCut,drCut,cbinlo,cbinhi,etalo,etahi));
+  tBMC->Draw("jtpt>>hUntaggedBJetsMC",Form("weight*(bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&&abs(refparton_flavorForB)==5&&subid==0 && abs(vz)<15 && refpt>20)",cbinlo,cbinhi,etalo,etahi));
   
   hUntaggedJetsMC = (TH1D*)hUntaggedLJetsMC->Clone("hUntaggedJetsMC");
   
@@ -1475,12 +1485,12 @@ void fillCounterHistos(std::string discr, double minWorkingPoint, double maxWork
   hUntaggedJetsData->Sumw2();
   
   if(pPb){
-    tdata->Draw("jtpt>>hTaggedJetsData",Form("weight*(%s>=%f&&%s<=%f&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f && evtSelection && abs(vz)<15&&run<211300 && discr_ssvHighEff>%f&&discr_csvSimple<=%f&&discr_prob<=%f&&djetR<=%f && abs(vz)<15)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,cbinlo,cbinhi,etalo,etahi,ssvCut,csvCut,jpCut,drCut));
-    tdata->Draw("jtpt>>hUntaggedJetsData",Form("weight*((%s<%f || %s>%f || discr_ssvHighEff<=%f || discr_csvSimple>%f || discr_prob>%f || djetR>%f )&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&& evtSelection && abs(vz)<15&&run<211300&& abs(vz)<15)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,ssvCut,csvCut,jpCut,drCut,cbinlo,cbinhi,etalo,etahi));
+    tdata->Draw("jtpt>>hTaggedJetsData",Form("weight*(%s>=%f&&%s<=%f&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f && evtSelection && abs(vz)<15 && discr_ssvHighEff>%f&&discr_csvSimple<=%f&&discr_prob<=%f&&djetR<=%f && abs(vz)<15)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,cbinlo,cbinhi,etalo,etahi,ssvCut,csvCut,jpCut,drCut));
+    tdata->Draw("jtpt>>hUntaggedJetsData",Form("weight*(bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&& evtSelection && abs(vz)<15 && abs(vz)<15)",cbinlo,cbinhi,etalo,etahi));
   }
   else{
     tdata->Draw("jtpt>>hTaggedJetsData",Form("weight*(%s>=%f&&%s<=%f&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f && evtSelection && abs(vz)<15&&run>211300 && discr_ssvHighEff>%f&&discr_csvSimple<=%f&&discr_prob<=%f&&djetR<=%f&& abs(vz)<15)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,cbinlo,cbinhi,etalo,etahi,ssvCut,csvCut,jpCut,drCut));
-    tdata->Draw("jtpt>>hUntaggedJetsData",Form("weight*((%s<%f || %s>%f || discr_ssvHighEff<=%f || discr_csvSimple>%f || discr_prob>%f || djetR>%f )&&bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&& evtSelection && abs(vz)<15&&run>211300 && abs(vz)<15)",discr.c_str(),minWorkingPoint,discr.c_str(),maxWorkingPoint,ssvCut,csvCut,jpCut,drCut,cbinlo,cbinhi,etalo,etahi));
+    tdata->Draw("jtpt>>hUntaggedJetsData",Form("weight*(bin>=%d&&bin<%d&&jteta>%f&&jteta<%f&& evtSelection && abs(vz)<15&&run>211300 && abs(vz)<15)",cbinlo,cbinhi,etalo,etahi));
   }
 }
 
