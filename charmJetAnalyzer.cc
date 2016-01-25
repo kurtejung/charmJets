@@ -12,8 +12,8 @@
 #include <vector>
 #include <stdlib.h>
 
-#include "UserCode/OpenHF/interface/hfcand_v1.hh"
-#include "UserCode/OpenHF/interface/snglhfcand_v1.hh"
+//#include "UserCode/OpenHF/interface/hfcand_v1.hh"
+//#include "UserCode/OpenHF/interface/snglhfcand_v1.hh"
 
 using namespace std;
 
@@ -22,7 +22,7 @@ const int MAXJETS = 100;
 const int MAXPARTICLES = 5000;
 //******************
 
-snglhfcand* convertGenToHFCand(float pt, float eta, float phi, float pdg, int gindex1, int gindex2, int gindex_dau2){
+/*snglhfcand* convertGenToHFCand(float pt, float eta, float phi, float pdg, int gindex1, int gindex2, int gindex_dau2){
 
   snglhfcand* cc = new snglhfcand_v1();
   cc->set_fpt(pt);
@@ -297,7 +297,7 @@ int findGenD0(snglhfcand* cand, int* pdg, int* nMothers, int (*motherIdx)[200], 
 	}
     }
   return -999;
-}
+}*/
 
 vector<int> searchCQuarks(int idx1, vector<int> parentCandidates, int* t_nMother, int* t_genPdg, int (*t_motherIdx)[200]){
   //if the c-quark isn't in the parentage info, push it back
@@ -403,7 +403,7 @@ vector<int> hasDDecay(int idx1, vector<int> DMesons, vector<double> duplicates, 
   return DMesons;
 }
 
-bool passDSelections(snglhfcand* cand, bool sigCuts, int pdg, float nColl){
+/*bool passDSelections(snglhfcand* cand, bool sigCuts, int pdg, float nColl){
 
   bool pass = false;
 
@@ -422,7 +422,7 @@ bool passDSelections(snglhfcand* cand, bool sigCuts, int pdg, float nColl){
                     cand->get_fmdau1() > 1.83 && cand->get_fmdau1() < 1.88) pass = true;
             else if(cand->get_type()-1==1 && cand->get_fm() > 1.83 && cand->get_fm() < 1.88) pass = true;
         }
-        /*if(pass && isMC){
+        if(pass && isMC){
             if((cand->get_type()-1==0 && abs(pdg)!=413) || (cand->get_type()-1==1 && abs(pdg)!=421)){
                 float randomno = t1->Rndm();
                 if(randomno < 1/(float)nColl) pass = true;
@@ -432,7 +432,7 @@ bool passDSelections(snglhfcand* cand, bool sigCuts, int pdg, float nColl){
             else{
                 //cout << "pre-pass! type: "<< cand->get_type()-1 << " pdg: "<< pdg << endl;
             }
-        }*/
+        } //
      }
      else pass = true;
 
@@ -440,17 +440,16 @@ bool passDSelections(snglhfcand* cand, bool sigCuts, int pdg, float nColl){
 
   return pass;
 
-}
+}*/
 
 double trigComb(bool *trg, int *pscl, double pt){
 
   double weight=0;
 
-  if(trg[4] && pt>=100) weight = pscl[4];
-  if(trg[3] && pt>=80 && pt<100) weight = pscl[3];
-  if(trg[2] && pt>=60 && pt<80) weight = pscl[2];
-  if(trg[1] && pt>=40 && pt<60) weight = pscl[1];
-  if(trg[0] && pt>=20 && pt<40) weight = pscl[0];
+  if(trg[3] && pt>=100) weight = pscl[3];
+  if(trg[2] && pt>=80 && pt<100) weight = pscl[2];
+  if(trg[1] && pt>=60 && pt<80) weight = pscl[1];
+  if(trg[0] && pt>=40 && pt<60) weight = pscl[0];
   
   return weight;
   
@@ -475,12 +474,14 @@ int genhasKpi(int pdg, int dau1pdg, int dau2pdg, int dau3pdg, int dstar2d0pdg1, 
     return 0;
 }
 
-void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC=0, int usePUsub=1){
+void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC=0, int usePUsub=0){
 
   double minJetPt = 20;
   double minRawJetPt = 23;
-  double maxJetEta = 2.5;
- 
+  double maxJetEta = 3.0;
+
+  bool doDMesonTree = false;
+
   bool expandedTree = true;
 
   /*int recalculatedEntries[8] = {0,0,0,0,0,0,0,0};
@@ -489,16 +490,17 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   double xsecs[9] = {5.445E-01, 3.378E-02, 3.778E-03, 4.412E-04, 6.147E-05, 1.018E-05, 2.477E-06, 6.160E-07, 0};
   int pthatEntries[9] = {523377,530119,553890,546277,542126,504193,543538,608515,131268};*/
 
-  int recalculatedEntries[7] = {0,0,0,0,0,0,0};
-  double pthatbins[8] = {30,50,80,120,170,220,280,9999};
+  int recalculatedEntries[9] = {0,0,0,0,0,0,0,0,0};
+  double pthatbins[10] = {15,30,50,80,120,170,220,280,370,9999};
   double cjetFrac[5] = {0.0997, 0.1215, 0.14795, 0.160, 0.175};
-  double xsecs[8] = {3.378E-02, 3.778E-03, 4.412E-04, 6.147E-05, 1.018E-05, 2.477E-06, 6.160E-07, 0};
-  int pthatEntries[7] = {523377,530119,553890,100000,100000,200000,200000};
+  double xsecs[10] = {5.335E-01, 3.378E-02, 3.778E-03, 4.412E-04, 6.147E-05, 1.018E-05, 2.477E-06, 6.160E-07, 1.088E-07, 0}; //5.02 tev weights
+  //double xsecs[8] = {1.075E-02,1.025E-03,9.865E-05,1.129E-05,1.465E-06,2.837E-07,5.323E-08, 0}; //2.76 tev weights
+  int pthatEntries[9] = {523377,530119,553890,100000,100000,200000,200000,200000,200000};
 
-  bool recalculateEntries = true;
+  bool recalculateEntries = false;
   if(recalculateEntries && isMC){
     cout << "recalculating entries in MC files" << endl;
-    TChain *tc = new TChain("akPu3PFJetAnalyzer/t","");
+    TChain *tc = new TChain("akPu4PFJetAnalyzer/t","");
     std::ifstream instrre(filelist.c_str(), std::ifstream::in);
     std::string filename;
     
@@ -513,29 +515,43 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
       tc->Add(filename.c_str());
     }
     
-    TH1D *pthatHisto = new TH1D("pthatHisto","",7,pthatbins);
+    TH1D *pthatHisto = new TH1D("pthatHisto","",9,pthatbins);
     tc->Project("pthatHisto","pthat");
-    for(int i=0; i<7; i++){
+    for(int i=0; i<9; i++){
       recalculatedEntries[i] = pthatHisto->GetBinContent(i+1);
       cout << "entries between pthat " << pthatbins[i] << " and " << pthatbins[i+1] << ": " << recalculatedEntries[i] << endl;
     }
   }
   else if(isMC==7){
-    pthatEntries[0] = 524545;
+    /*pthatEntries[0] = 524545;
     pthatEntries[1] = 530193;
     pthatEntries[2] = 553893;
     pthatEntries[3] = 546277;
     pthatEntries[4] = 542126;
     pthatEntries[5] = 505112;
     pthatEntries[6] = 544734;
-    pthatEntries[7] = 737824;
-    for(int i=8; i<9; i++){ pthatEntries[i]=0; }
+    pthatEntries[7] = 608834;
+    pthatEntries[8] = 653566;*/
+    //for(int i=8; i<9; i++){ pthatEntries[i]=0; }
+  
+    pthatEntries[0] = 0;
+    pthatEntries[1] = 177324;
+    pthatEntries[2] = 196470;
+    pthatEntries[3] = 194698;
+    pthatEntries[4] = 193139;
+    pthatEntries[5] = 179810;
+    pthatEntries[6] = 181942;
+    pthatEntries[7] = 213619;
+    pthatEntries[8] = 46498;
   }
 
   //Centrality reweighting (official QCDMC)
   TF1 * fCen = new TF1("fCen","[0]*exp([1]+[2]*x+[3]*x*x+[4]*x*x*x+[5]*x*x*x*x+[6]*x*x*x*x*x)", 0., 100.);
   fCen->SetParameters(5.81628e-03, 4.88285e+00, 9.60958e-02, -5.16892e-03, 1.04572e-04, -9.89614e-07, 3.79293e-09); //forward dir
   //else fCen->SetParameters(5.30157e-03, 4.76386e+00, 1.30991e-01, -6.38698e-03, 1.17033e-04, -9.69067e-07, 3.17267e-09); //reverse dir
+
+  std::string usingUEsub = "Pu";
+  if(!usePUsub) usingUEsub = "";
 
   TFile *fout = NULL;
   if(isMC==1) fout=new TFile(Form("DMesonCJet_DpmEmbed_pPbMC_ppReco_akPu3PF_%d.root",endfile),"recreate");
@@ -544,8 +560,8 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   else if(isMC==4) fout=new TFile(Form("DMesonCJet_Dstar_pPbMC_ppReco_akPu3PF_%d.root",endfile),"recreate");
   else if(isMC==5) fout=new TFile(Form("DMesonCJet_Dzero_pPbMC_ppReco_akPu3PF_%d.root",endfile),"recreate");
   else if(isMC==6) fout=new TFile(Form("DMesonCJet_CJetOnly_pPbMC_ppReco_akPu3PF_%d.root",endfile),"recreate");
-  else if(isMC==7) fout=new TFile(Form("DMesonCJet_QCDJetOnly_pPbMC_centReweight_ppReco_akPu3PF_%d.root",endfile),"recreate");
-  else fout=new TFile(Form("DMesonCJet_NoJetTrgCut_pPbdata_ppReco_akPu3PF_%d.root",endfile),"recreate");
+  else if(isMC==7) fout=new TFile(Form("DMesonCJet_QCDJetOnly_5TeVppMC_ppReco_ak%s4PF_%d.root",usingUEsub.c_str(),endfile),"recreate");
+  else fout=new TFile(Form("DMesonCJet_NoJetTrgCut_ppdata_Run2_5TeV_LowerJetPD_ppReco_ak%s3PF_%d.root",usingUEsub.c_str(),endfile),"recreate");
 
   if(isMC==1) cout << "Assuming we're using the D plus/minus MC!!" << endl;
   else if(isMC==2) cout << "Assuming we're using the Ds -> K*K MC!! "<< endl;
@@ -559,7 +575,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   TH1D *D0withKpi = new TH1D("D0withKpi","",40,0,150); D0withKpi->Sumw2();
   TH1D *D0withoutKpi = new TH1D("D0withoutKpi","",40,0,150); D0withoutKpi->Sumw2();
 
-  float t_jtpt[MAXJETS], t_jteta[MAXJETS], t_jtphi[MAXJETS], t_rawpt[MAXJETS], t_discr_prob[MAXJETS], t_discr_ssvHighEff[MAXJETS], t_discr_ssvHighPur[MAXJETS], t_discr_csvSimple[MAXJETS], t_discr_cJetHighEff[MAXJETS], t_discr_cJetHighPur[MAXJETS], t_discr_tcHighEff[MAXJETS], t_discr_tcHighPur[MAXJETS], t_svtxm[MAXJETS], t_svtxmcorr[MAXJETS], t_sv2Trkdl[MAXJETS], t_sv2Trkdls[MAXJETS], t_svtxTrkSumChi2[MAXJETS], t_svtxdl[MAXJETS], t_chargedMax[MAXJETS], t_chargedSum[MAXJETS], t_neutralMax[MAXJETS], t_neutralSum[MAXJETS], t_photonMax[MAXJETS], t_photonSum[MAXJETS], t_eSum[MAXJETS], t_muSum[MAXJETS];
+  float t_jtpt[MAXJETS], t_jteta[MAXJETS], t_jtphi[MAXJETS], t_rawpt[MAXJETS], t_discr_prob[MAXJETS], t_discr_ssvHighEff[MAXJETS], t_discr_ssvHighPur[MAXJETS], t_discr_csvSimple[MAXJETS], t_discr_cJetHighEff[MAXJETS], t_discr_cJetHighPur[MAXJETS], t_discr_tcHighEff[MAXJETS], t_discr_tcHighPur[MAXJETS], t_svtxm[MAXJETS], t_svtxmcorr[MAXJETS], t_sv2Trkdl[MAXJETS], t_sv2Trkdls[MAXJETS], t_svtxTrkSumChi2[MAXJETS], t_svtxdl[MAXJETS], t_chargedMax[MAXJETS], t_chargedSum[MAXJETS], t_neutralMax[MAXJETS], t_neutralSum[MAXJETS], t_photonMax[MAXJETS], t_photonSum[MAXJETS], t_eSum[MAXJETS], t_muSum[MAXJETS], t_genJeteta[MAXJETS], t_genJetphi[MAXJETS];
   int t_nsvtx[MAXJETS], t_svtxntrk[MAXJETS], t_svtxTrkNetCharge[MAXJETS], t_svtxNtrkInCone[MAXJETS];
   int t_nref, t_mult;
   int t_genMatch[MAXJETS];
@@ -569,11 +585,12 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   float t_genpt[MAXPARTICLES], t_geneta[MAXPARTICLES], t_genphi[MAXPARTICLES];
 
   int nref, bin, run;
-  vector<double> jtpt, jteta, jtphi, refpt, rawpt, refparton_flavorForB, discr_prob, discr_ssvHighEff, discr_ssvHighPur, discr_csvSimple, discr_cJetHighEff, discr_cJetHighPur, discr_tcHighEff, discr_tcHighPur, svtxm, svtxmcorr, sv2Trkdl, sv2Trkdls, svtxTrkSumChi2, svtxTrkNetCharge, svtxNtrkInCone, nsvtx, svtxntrk, svtxdl, subid, chargedMax, chargedSum, neutralMax, neutralSum, photonMax, photonSum, eSum, muSum, djetR, closestDPt, closestDType, closestDMass, closestDChildMass, closestDProb, closestDAlpha, closestDChi2;
+  vector<double> jtpt, jteta, jtphi, refpt, rawpt, refparton_flavorForB, discr_prob, discr_ssvHighEff, discr_ssvHighPur, discr_csvSimple, discr_cJetHighEff, discr_cJetHighPur, discr_tcHighEff, discr_tcHighPur, svtxm, svtxmcorr, sv2Trkdl, sv2Trkdls, svtxTrkSumChi2, svtxTrkNetCharge, svtxNtrkInCone, nsvtx, svtxntrk, svtxdl, subid, chargedMax, chargedSum, neutralMax, neutralSum, photonMax, photonSum, eSum, muSum, djetR, closestDPt, closestDType, closestDMass, closestDChildMass, closestDProb, closestDAlpha, closestDChi2, genJeteta, genJetphi;
   vector<int> genMatch;
   int HLT_Jet20_NoJetID_v1, HLT_Jet40_NoJetID_v1, HLT_Jet60_NoJetID_v1, HLT_Jet80_NoJetID_v1, HLT_Jet100_NoJetID_v1;
   int HLT_Jet20_NoJetID_v1_Prescl, HLT_Jet40_NoJetID_v1_Prescl, HLT_Jet60_NoJetID_v1_Prescl, HLT_Jet80_NoJetID_v1_Prescl, HLT_Jet100_NoJetID_v1_Prescl;
-  float HLT_JetObjectPt, t_pthat;
+  int L1_Jet40Seed_Prescl, L1_Jet60Seed_Prescl, L1_Jet80Seed_Prescl, L1_Jet100Seed_Prescl;
+  float t_pthat;
   double triggerPt, pthat, resCorr, weight;
   float vz;
   int pHBHENoiseFilter, pprimaryvertexFilter, pcollisionEventSelection;
@@ -582,7 +599,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 
   int t_refparton_flavorForB[100], t_subid[100];
   float t_refpt[100];
-  hfcand_v1* hfcandidate = new hfcand_v1;
+  //hfcand_v1* hfcandidate = new hfcand_v1;
 
   vector<double> dGenPt, dCandPt, dCandMass, dCandEta, dCandPhi, dCandDr, dCandChildMass, dCandType, dCandCharge1, dCandCharge2;
   vector<double> dCandPiPt, dCandPiEta, dCandPiPhi, dCandKPt, dCandKEta, dCandKPhi;
@@ -608,6 +625,8 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   ct->Branch("jtpt",&jtpt);
   ct->Branch("jteta",&jteta);
   ct->Branch("jtphi",&jtphi);
+  ct->Branch("genJeteta",&genJeteta);
+  ct->Branch("genJetphi",&genJetphi);
   if(isMC) ct->Branch("refpt",&refpt);
   ct->Branch("rawpt",&rawpt);
   if(isMC) ct->Branch("refparton_flavorForB",&refparton_flavorForB);
@@ -701,6 +720,10 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   ct->Branch("HLT_Jet60_NoJetID_v1_Prescl",&HLT_Jet60_NoJetID_v1_Prescl,"HLT_Jet60_NoJetID_v1_Prescl/I");
   ct->Branch("HLT_Jet80_NoJetID_v1_Prescl",&HLT_Jet80_NoJetID_v1_Prescl,"HLT_Jet80_NoJetID_v1_Prescl/I");
   ct->Branch("HLT_Jet100_NoJetID_v1_Prescl",&HLT_Jet100_NoJetID_v1_Prescl,"HLT_Jet100_NoJetID_v1_Prescl/I");
+  ct->Branch("L1_Jet40Seed_Prescl",&L1_Jet40Seed_Prescl,"L1_Jet40Seed_Prescl/I");
+  ct->Branch("L1_Jet60Seed_Prescl",&L1_Jet60Seed_Prescl,"L1_Jet60Seed_Prescl/I");
+  ct->Branch("L1_Jet80Seed_Prescl",&L1_Jet80Seed_Prescl,"L1_Jet80Seed_Prescl/I");
+  ct->Branch("L1_Jet100Seed_Prescl",&L1_Jet100Seed_Prescl,"L1_Jet100Seed_Prescl/I");
   ct->Branch("triggerPt",&triggerPt,"triggerPt/D");
   if(isMC){
     ct->Branch("pthat",&pthat,"pthat/D");
@@ -773,6 +796,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   vector<int> hasHadronicDecay;
   vector<int> genIdx, genPdg, genDauIdx1, genDauIdx2, genDauDau2;
   TTree *gTree = new TTree("gTree","");
+  if(doDMesonTree){
   gTree->Branch("genPt",&genPt);
   gTree->Branch("genEta",&genEta);
   gTree->Branch("genPhi",&genPhi);
@@ -782,7 +806,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   gTree->Branch("genDauIdx2",&genDauIdx2);
   gTree->Branch("genDauDau2",&genDauDau2);
   gTree->Branch("hasHadronicDecay",&hasHadronicDecay);
-
+  }
   //**** Initialize reader tree variables ***** /
   /*  trigO *HLT_Jet_NoJetID_v1_trigObject[6];
   for(int i=0; i<6; i++){
@@ -819,57 +843,85 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
     TTree *evtTree;
     TTree *skimTree;
     TTree *genTree=0;
-    TNtuple *HltObject;
+    TTree *HltObject40=0;
+    TTree *HltObject60=0;
+    TTree *HltObject80=0;
+    TTree *HltObject100=0;
+
+    cout << "starting to load trees!" << endl;
 
     if(usePUsub) t = (TTree*) fin->Get("akPu3PFJetAnalyzer/t");
     else t = (TTree*) fin->Get("ak3PFJetAnalyzer/t");
   
-    if(isMC){
-      hftree = (TTree*)fin->Get("HFtree/hftree");
-      genTree = (TTree*)fin->Get("HiGenParticleAna/hi");
-    }
-    else{
-      hftree = (TTree*)fin->Get("HFtree/hftree");
-    }
+    //if(isMC){
+    //  hftree = (TTree*)fin->Get("HFtree/hftree");
+    //  genTree = (TTree*)fin->Get("HiGenParticleAna/hi");
+   // }
+    //else{
+      //hftree = (TTree*)fin->Get("HFtree/hftree");
+    //}
     HltTree = (TTree*)fin->Get("hltanalysis/HltTree");
-    HltObject = (TNtuple*)fin->Get("hltobject/jetObjTree");
+    if(!isMC){
+        HltObject40 = (TTree*)fin->Get("hltobject/HLT_AK4CaloJet40_Eta5p1_v");
+        HltObject60 = (TTree*)fin->Get("hltobject/HLT_AK4CaloJet60_Eta5p1_v");
+        HltObject80 = (TTree*)fin->Get("hltobject/HLT_AK4CaloJet80_Eta5p1_v");
+        HltObject100 = (TTree*)fin->Get("hltobject/HLT_AK4CaloJet100_Eta5p1_v");
+    }
     //HltRerun = (TTree*)fin->Get("hltReRun/hltTree");
     evtTree = (TTree*)fin->Get("hiEvtAnalyzer/HiTree");
     skimTree = (TTree*)fin->Get("skimanalysis/HltTree");
 
-    if(t->GetEntries() != hftree->GetEntries() || t->GetEntries() != HltTree->GetEntries() || t->GetEntries() != evtTree->GetEntries() || t->GetEntries() != skimTree->GetEntries()){
+    if(!HltTree || !skimTree || !t){ cout << "crucial tree not found!" << endl; exit(0); }
+    
+    if(t->GetEntries() != HltTree->GetEntries() || t->GetEntries() != evtTree->GetEntries() || t->GetEntries() != skimTree->GetEntries()){
       cout << "WARNING! TREES HAVE DIFFERENT NENTRIES! DESYNCED??" << endl;
       exit(0);
     }
     
-    HltTree->SetBranchAddress("HLT_PAJet20_NoJetID_v1",&HLT_Jet20_NoJetID_v1);
-    HltTree->SetBranchAddress("HLT_PAJet40_NoJetID_v1",&HLT_Jet40_NoJetID_v1);
-    HltTree->SetBranchAddress("HLT_PAJet60_NoJetID_v1",&HLT_Jet60_NoJetID_v1);
-    HltTree->SetBranchAddress("HLT_PAJet80_NoJetID_v1",&HLT_Jet80_NoJetID_v1);
-    HltTree->SetBranchAddress("HLT_PAJet100_NoJetID_v1",&HLT_Jet100_NoJetID_v1);
-    HltTree->SetBranchAddress("HLT_PAJet20_NoJetID_v1_Prescl",&HLT_Jet20_NoJetID_v1_Prescl);
-    HltTree->SetBranchAddress("HLT_PAJet40_NoJetID_v1_Prescl",&HLT_Jet40_NoJetID_v1_Prescl);
-    HltTree->SetBranchAddress("HLT_PAJet60_NoJetID_v1_Prescl",&HLT_Jet60_NoJetID_v1_Prescl);
-    HltTree->SetBranchAddress("HLT_PAJet80_NoJetID_v1_Prescl",&HLT_Jet80_NoJetID_v1_Prescl);
-    HltTree->SetBranchAddress("HLT_PAJet100_NoJetID_v1_Prescl",&HLT_Jet100_NoJetID_v1_Prescl);
-    HltObject->SetBranchAddress("pt",&HLT_JetObjectPt);
-    if(!isMC) skimTree->SetBranchAddress("pPAcollisionEventSelectionPA",&pcollisionEventSelection);
-    skimTree->SetBranchAddress("pHBHENoiseFilter",&pHBHENoiseFilter);
-    //skimTree->SetBranchAddress("pprimaryvertexFilter",&pprimaryvertexFilter);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet40_Eta5p1_v1",&HLT_Jet40_NoJetID_v1);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet60_Eta5p1_v1",&HLT_Jet60_NoJetID_v1);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet80_Eta5p1_v1",&HLT_Jet80_NoJetID_v1);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet100_Eta5p1_v1",&HLT_Jet100_NoJetID_v1);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet40_Eta5p1_v1_Prescl",&HLT_Jet40_NoJetID_v1_Prescl);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet60_Eta5p1_v1_Prescl",&HLT_Jet60_NoJetID_v1_Prescl);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet80_Eta5p1_v1_Prescl",&HLT_Jet80_NoJetID_v1_Prescl);
+    HltTree->SetBranchAddress("HLT_AK4CaloJet100_Eta5p1_v1_Prescl",&HLT_Jet100_NoJetID_v1_Prescl);
+    HltTree->SetBranchAddress("L1_SingleJet28_BptxAND_Prescl",&L1_Jet40Seed_Prescl);
+    HltTree->SetBranchAddress("L1_SingleJet40_BptxAND_Prescl",&L1_Jet60Seed_Prescl);
+    HltTree->SetBranchAddress("L1_SingleJet48_BptxAND_Prescl",&L1_Jet80Seed_Prescl);
+    HltTree->SetBranchAddress("L1_SingleJet52_BptxAND_Prescl",&L1_Jet100Seed_Prescl);
+
+    vector<double> *trgPts40=0;
+    vector<double> *trgPts60=0;
+    vector<double> *trgPts80=0;
+    vector<double> *trgPts100=0;
+    if(!isMC){
+        HltObject40->SetBranchAddress("pt",&trgPts40);
+        HltObject60->SetBranchAddress("pt",&trgPts60);
+        HltObject80->SetBranchAddress("pt",&trgPts80);
+        HltObject100->SetBranchAddress("pt",&trgPts100);
+    }
+    unsigned int run;
+    //if(!isMC) skimTree->SetBranchAddress("pcollisionEventSelection",&pcollisionEventSelection);
+    skimTree->SetBranchAddress("HBHENoiseFilterResult",&pHBHENoiseFilter);
+    skimTree->SetBranchAddress("pPAprimaryVertexFilter",&pprimaryvertexFilter);
     evtTree->SetBranchAddress("hiBin",&bin);
     evtTree->SetBranchAddress("vz",&vz);
-    if(isMC) evtTree->SetBranchAddress("Ncoll",&nColl);
+    evtTree->SetBranchAddress("run",&run);
+    //if(isMC) evtTree->SetBranchAddress("Ncoll",&nColl);
     if(isMC){
       t->SetBranchAddress("refparton_flavorForB",t_refparton_flavorForB);
       t->SetBranchAddress("refpt",t_refpt);
       t->SetBranchAddress("subid",t_subid);
       t->SetBranchAddress("matchedGenID",t_genMatch);
       t->SetBranchAddress("pthat",&t_pthat);
+      t->SetBranchAddress("refeta",t_genJeteta);
+      t->SetBranchAddress("refphi",t_genJetphi);
       //cout << "WARNING! isGSP is NOT set!" << endl;
       t->SetBranchAddress("refparton_isGSP",&t_refparton_isGSP);
     }
-    if(!isMC) evtTree->SetBranchAddress("run",&run);
-    hftree->SetBranchAddress("hfcandidate",&hfcandidate);
+    //if(!isMC) evtTree->SetBranchAddress("run",&run);
+    //hftree->SetBranchAddress("hfcandidate",&hfcandidate);
 
     t->SetBranchAddress("nref",&t_nref);
     t->SetBranchAddress("rawpt",t_rawpt);
@@ -879,22 +931,20 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
     t->SetBranchAddress("jtm",t_jtm);
     t->SetBranchAddress("discr_ssvHighEff",t_discr_ssvHighEff);
     t->SetBranchAddress("discr_ssvHighPur",t_discr_ssvHighPur);
-    if(isMC) t->SetBranchAddress("discr_cJetHighEff",t_discr_cJetHighEff);
-    if(isMC) t->SetBranchAddress("discr_cJetHighPur",t_discr_cJetHighPur);
     t->SetBranchAddress("discr_csvSimple",t_discr_csvSimple);
     t->SetBranchAddress("discr_prob",t_discr_prob);
-    t->SetBranchAddress("discr_tcHighEff",t_discr_tcHighEff);
-    t->SetBranchAddress("discr_tcHighPur",t_discr_tcHighPur);
+    //t->SetBranchAddress("discr_tcHighEff",t_discr_tcHighEff);
+    //t->SetBranchAddress("discr_tcHighPur",t_discr_tcHighPur);
     t->SetBranchAddress("nsvtx",t_nsvtx);
     t->SetBranchAddress("svtxntrk",t_svtxntrk);
     t->SetBranchAddress("svtxdl",t_svtxdl);
     t->SetBranchAddress("svtxm",t_svtxm);
     t->SetBranchAddress("svtxmcorr",t_svtxmcorr);
-    t->SetBranchAddress("sv2Trkdl",t_sv2Trkdl);
-    t->SetBranchAddress("sv2Trkdls",t_sv2Trkdls);
-    t->SetBranchAddress("svtxTrkSumChi2",t_svtxTrkSumChi2);
-    t->SetBranchAddress("svtxTrkNetCharge",t_svtxTrkNetCharge);
-    t->SetBranchAddress("svtxNtrkInCone",t_svtxNtrkInCone);
+    //t->SetBranchAddress("sv2Trkdl",t_sv2Trkdl);
+    //t->SetBranchAddress("sv2Trkdls",t_sv2Trkdls);
+    //t->SetBranchAddress("svtxTrkSumChi2",t_svtxTrkSumChi2);
+    //t->SetBranchAddress("svtxTrkNetCharge",t_svtxTrkNetCharge);
+    //t->SetBranchAddress("svtxNtrkInCone",t_svtxNtrkInCone);
     t->SetBranchAddress("chargedMax",t_chargedMax);
     t->SetBranchAddress("photonMax",t_photonMax);
     t->SetBranchAddress("neutralMax",t_neutralMax);
@@ -904,7 +954,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
     t->SetBranchAddress("muSum",t_muSum);
     t->SetBranchAddress("eSum",t_eSum);
 
-    t->SetBranchAddress("nIP",t_nIP);
+    /*t->SetBranchAddress("nIP",t_nIP);
     t->SetBranchAddress("nIPtrk",t_nIPtrk);
     t->SetBranchAddress("ipPt",t_ipPt);
     t->SetBranchAddress("ip2dSig",t_trackIP2dSig);
@@ -914,10 +964,10 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
     t->SetBranchAddress("ipProb0",t_ipProb0);
     t->SetBranchAddress("ipDist2Jet",t_ipDist2Jet);
     t->SetBranchAddress("ipClosest2Jet",t_ipClosest2Jet);
-    t->SetBranchAddress("trackN",t_jtntrks);
+    t->SetBranchAddress("trackN",t_jtntrks);*/
     t->SetBranchAddress("svtxdls",t_svtxdls);
     t->SetBranchAddress("svtxpt",t_svtxpt);
-    t->SetBranchAddress("svJetDeltaR",t_svJetDeltaR);
+    /*t->SetBranchAddress("svJetDeltaR",t_svJetDeltaR);
     
     t->SetBranchAddress("trackPtRel",t_trackPtRel);
     t->SetBranchAddress("trackPPar",t_trackPPar);
@@ -941,30 +991,36 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
       genTree->SetBranchAddress("daughterIdx",t_daughterIdx);
       genTree->SetBranchAddress("nMothers",t_nMothers);
       genTree->SetBranchAddress("nDaughters",t_nDaughters);
-    }
+    }*/
+
     
     int nentries = t->GetEntries();
     for(int ientry=0; ientry<nentries; ientry++){
       if (ientry%100000==0) cout<<" i = "<<ientry<<" out of "<<nentries<<" ("<<(int)(100*(float)ientry/(float)nentries)<<"%)"<<endl;
-      
-      hftree->GetEntry(ientry);
+     // hftree->GetEntry(ientry);
       t->GetEntry(ientry);
       evtTree->GetEntry(ientry);
       HltTree->GetEntry(ientry);
-      if(!isMC) HltObject->GetEntry(ientry);
+      if(!isMC){
+          HltObject40->GetEntry(ientry);
+          HltObject60->GetEntry(ientry);
+          HltObject80->GetEntry(ientry);
+          HltObject100->GetEntry(ientry);
+      }
       //HltRerun->GetEntry(ientry);
       skimTree->GetEntry(ientry);
       if(isMC) genTree->GetEntry(ientry);
 
       if(!isMC){
-       	if(!pHBHENoiseFilter || !pcollisionEventSelection) continue;
+       	if(!pHBHENoiseFilter || !pprimaryvertexFilter || abs(vz)>15) continue;
       }
-      if(!HLT_Jet20_NoJetID_v1 && !HLT_Jet40_NoJetID_v1 && !HLT_Jet60_NoJetID_v1 && !HLT_Jet80_NoJetID_v1 && !HLT_Jet100_NoJetID_v1) continue;
-
+      if(!isMC){
+          if(!HLT_Jet40_NoJetID_v1 && !HLT_Jet60_NoJetID_v1 && !HLT_Jet80_NoJetID_v1 && !HLT_Jet100_NoJetID_v1) continue;
+      }
       if(bin<0) bin=0;
 
       //Fill all the gen tree stuff!
-      if(isMC){
+      if(isMC && doDMesonTree){
 	for(int igen=0; igen<t_mult; igen++){
 	  if(t_nDaughters[igen]<2 || t_nDaughters[igen]>3) continue;
 	  if(abs(t_genPdg[igen])==411 || abs(t_genPdg[igen])==413 || abs(t_genPdg[igen])==421 || abs(t_genPdg[igen])==431){
@@ -1010,16 +1066,8 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 
       //double trigPt[5][100];
 
-      bool trgDec[5] = {(bool)HLT_Jet20_NoJetID_v1, (bool)HLT_Jet40_NoJetID_v1, (bool)HLT_Jet60_NoJetID_v1, (bool)HLT_Jet80_NoJetID_v1, (bool)HLT_Jet100_NoJetID_v1};
-      int treePrescl[5] = {HLT_Jet20_NoJetID_v1_Prescl, HLT_Jet40_NoJetID_v1_Prescl, HLT_Jet60_NoJetID_v1_Prescl, HLT_Jet80_NoJetID_v1_Prescl, HLT_Jet100_NoJetID_v1_Prescl};
-      /*int trgObjSize[5];
-      for(int ii=0; ii<5; ii++){ trgObjSize[ii] = HLT_Jet_NoJetID_v1_trigObject[ii]->size();}
-      //Fill the trigger Pt/Eta/Phi from the TriggerObjects
-      for(int ii=0; ii<5; ii++){
-	for(int iObj=0; iObj<trgObjSize[ii]; iObj++){
-	  trigPt[ii][iObj] = HLT_Jet_NoJetID_v1_trigObject[ii]->at(iObj).pt();
-	}
-	}*/
+      bool trgDec[4] = {(bool)HLT_Jet40_NoJetID_v1, (bool)HLT_Jet60_NoJetID_v1, (bool)HLT_Jet80_NoJetID_v1, (bool)HLT_Jet100_NoJetID_v1};
+      int treePrescl[4] = {L1_Jet40Seed_Prescl*HLT_Jet40_NoJetID_v1_Prescl, L1_Jet60Seed_Prescl*HLT_Jet60_NoJetID_v1_Prescl, L1_Jet80Seed_Prescl*HLT_Jet80_NoJetID_v1_Prescl, L1_Jet100Seed_Prescl*HLT_Jet100_NoJetID_v1_Prescl};
 
       int maxtrg= -1;
       for(int ii=4; ii>=0; ii--){
@@ -1038,18 +1086,44 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 	}*/
 
       if(recalculateEntries){
-	for(int i=0; i<7; i++){
+	for(int i=0; i<9; i++){
 	  pthatEntries[i] = recalculatedEntries[i];
 	}
       }
-      if(!isMC) weight = trigComb(trgDec, treePrescl, HLT_JetObjectPt);
+      //cout << "warning! Setting non-MC weights to 1!" << endl;
+      if(!isMC){
+          triggerPt=0.;
+          if(HLT_Jet40_NoJetID_v1){
+              for(unsigned int itt=0; itt<trgPts40->size(); itt++){
+                  if(trgPts40->at(itt)>triggerPt) triggerPt = trgPts40->at(itt);
+              }
+          }
+          if(HLT_Jet60_NoJetID_v1){
+              for(unsigned int itt=0; itt<trgPts60->size(); itt++){
+                  if(trgPts60->at(itt)>triggerPt) triggerPt = trgPts60->at(itt);
+              }
+          }
+          if(HLT_Jet80_NoJetID_v1){
+              for(unsigned int itt=0; itt<trgPts80->size(); itt++){
+                  if(trgPts80->at(itt)>triggerPt) triggerPt = trgPts80->at(itt);
+              }
+          }
+          if(HLT_Jet100_NoJetID_v1){
+              for(unsigned int itt=0; itt<trgPts100->size(); itt++){
+                  if(trgPts100->at(itt)>triggerPt) triggerPt = trgPts100->at(itt);
+              }
+          }
+
+          weight = trigComb(trgDec, treePrescl, triggerPt);
+      //    cout << "weight = " << weight << endl;
+      }
       else{
 	int ibin=0;
 	while(t_pthat>pthatbins[ibin+1]) ibin++;
 	if(isMC!=7) weight = cjetFrac[ibin]*(xsecs[ibin]-xsecs[ibin+1])/pthatEntries[ibin]; //for c-jet MC
         else{
             weight = (xsecs[ibin]-xsecs[ibin+1])/pthatEntries[ibin]; //for qcd-jet MC
-            weight *= fCen->Eval(bin);     
+            //weight *= fCen->Eval(bin);     
         }
       }
 
@@ -1062,6 +1136,8 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
             jtpt.push_back(t_jtpt[ijet]);
 	  jteta.push_back(t_jteta[ijet]);
 	  jtphi.push_back(t_jtphi[ijet]);
+          if(isMC) genJeteta.push_back(t_genJeteta[ijet]);
+          if(isMC) genJetphi.push_back(t_genJetphi[ijet]);
 	  rawpt.push_back(t_rawpt[ijet]);
 	  if(isMC) refpt.push_back(t_refpt[ijet]);
 	  if(isMC) refparton_flavorForB.push_back(t_refparton_flavorForB[ijet]);
@@ -1070,17 +1146,17 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 	  discr_ssvHighEff.push_back(t_discr_ssvHighEff[ijet]);
 	  discr_ssvHighPur.push_back(t_discr_ssvHighPur[ijet]);
 	  discr_csvSimple.push_back(t_discr_csvSimple[ijet]);
-          discr_cJetHighEff.push_back(t_discr_cJetHighEff[ijet]);
-          discr_cJetHighPur.push_back(t_discr_cJetHighPur[ijet]);
-	  discr_tcHighEff.push_back(t_discr_tcHighEff[ijet]);
-          discr_tcHighPur.push_back(t_discr_tcHighPur[ijet]);
+          //discr_cJetHighEff.push_back(t_discr_cJetHighEff[ijet]);
+          //discr_cJetHighPur.push_back(t_discr_cJetHighPur[ijet]);
+	  //discr_tcHighEff.push_back(t_discr_tcHighEff[ijet]);
+          //discr_tcHighPur.push_back(t_discr_tcHighPur[ijet]);
           svtxm.push_back(t_svtxm[ijet]);
-	  sv2Trkdl.push_back(t_sv2Trkdl[ijet]);
-          sv2Trkdls.push_back(t_sv2Trkdls[ijet]);
+	  //sv2Trkdl.push_back(t_sv2Trkdl[ijet]);
+          //sv2Trkdls.push_back(t_sv2Trkdls[ijet]);
           svtxmcorr.push_back(t_svtxmcorr[ijet]);
-          svtxTrkSumChi2.push_back(t_svtxTrkSumChi2[ijet]);
-          svtxTrkNetCharge.push_back(t_svtxTrkNetCharge[ijet]);
-          svtxNtrkInCone.push_back(t_svtxNtrkInCone[ijet]);
+          //svtxTrkSumChi2.push_back(t_svtxTrkSumChi2[ijet]);
+          //svtxTrkNetCharge.push_back(t_svtxTrkNetCharge[ijet]);
+          //svtxNtrkInCone.push_back(t_svtxNtrkInCone[ijet]);
           nsvtx.push_back(t_nsvtx[ijet]);
 	  svtxntrk.push_back(t_svtxntrk[ijet]);
 	  svtxdl.push_back(t_svtxdl[ijet]);
@@ -1088,13 +1164,13 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
           svtxdls.push_back(t_svtxdls[ijet]);
           jtntrks.push_back(t_jtntrks[ijet]);
           jtm.push_back(t_jtm[ijet]);
-          svJetDeltaR.push_back(t_svJetDeltaR[ijet]);
+          /*svJetDeltaR.push_back(t_svJetDeltaR[ijet]);
           trackSumJetDeltaR.push_back(t_trackSumJetDeltaR[ijet]);
           trackSip2dSigAboveCharm.push_back(t_trackSip2dSigAboveCharm[ijet]);
           trackSip3dSigAboveCharm.push_back(t_trackSip3dSigAboveCharm[ijet]);
           trackSip2dValAboveCharm.push_back(t_trackSip2dValAboveCharm[ijet]);
           trackSip3dValAboveCharm.push_back(t_trackSip3dValAboveCharm[ijet]);
-         
+         */
           if(expandedTree){
               for(int iIP=0; iIP<t_nIP[ijet]; iIP++){
                   ipPt.push_back(t_ipPt[ijet][iIP]);
@@ -1129,7 +1205,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
           }
 	  if(isMC) subid.push_back(t_subid[ijet]);
 	  if(isMC) genMatch.push_back(t_genMatch[ijet]);
-	  if(isMC){
+	  if(isMC && doDMesonTree){
 	    vector<int> t_hasGenD;
 	    vector<double> genPts, dummy2;
 	    vector<int> t_hasGenDwithKpi;
@@ -1195,7 +1271,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
         double closestPt=-999;
         double closestMass=-999, closestChildMass=-999, closestProb=-999, closestAlpha=-999, closestchi2=-999;
 	int closestType=-1;
-        for(int icand=0; icand<hfcandidate->get_nhfcand(); icand++){
+        /*for(int icand=0; icand<hfcandidate->get_nhfcand(); icand++){
 	  snglhfcand* cand = hfcandidate->get_hfcand(icand);
           int pb=-999;
           if(isMC){
@@ -1214,7 +1290,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
             closestAlpha = cand->get_falpha0();
             closestchi2 = cand->get_fchi2();
           }
-	}
+	}*/
 	djetR.push_back(djetR_t);
         closestDPt.push_back(closestPt);
         closestDMass.push_back(closestMass);
@@ -1224,10 +1300,11 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
         closestDChi2.push_back(closestchi2);
         closestDType.push_back(closestType);
       }
-      //cout << "event: "<< ientry << " ncandidates: "<< hfcandidate->get_nhfcand() << endl;
-      for(int icand=0; icand<hfcandidate->get_nhfcand(); icand++){
+      /*if(doDMesonTree){
+      cout << "event: "<< ientry << " ncandidates: "<< hfcandidate->get_nhfcand() << endl;
+      //for(int icand=0; icand<hfcandidate->get_nhfcand(); icand++){
 
-	snglhfcand* cand = hfcandidate->get_hfcand(icand);
+	//snglhfcand* cand = hfcandidate->get_hfcand(icand);
 	
 	if(passDSelections(cand, false,-999,1)){
 	  // cout << "candidate number: "<< icand << ", pt: " << cand->get_fpt() << endl;
@@ -1355,9 +1432,10 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 	  }
 	}
       }
-      if(dCandPt.size()>0 || jtpt.size()>0){
+      }*/
+      if(jtpt.size()>0){
 	ct->Fill();
-	gTree->Fill();
+	if(doDMesonTree) gTree->Fill();
       }
 
       //clear out all stuff from vector collections!
@@ -1366,6 +1444,8 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
       genIdx.clear();
       genPdg.clear();
       genEta.clear();
+      genJeteta.clear();
+      genJetphi.clear();
       genDauIdx1.clear();
       genDauIdx2.clear();
       genDauDau2.clear();
@@ -1462,7 +1542,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
       falpha0.clear();
       fprob.clear();
       fchi2.clear();
-      if(isMC){
+      if(isMC && doDMesonTree ){
 	dCandMatchGenPdg_dau2.clear();
 	dCandMatchGenPdg_index1.clear();
 	dCandMatchGenPdg_index2.clear();
@@ -1486,7 +1566,7 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
 	dCandGenMatchDoubleCountedIdx.clear();
       }
       
-      hfcandidate->Reset();
+      //if(doDMesonTree) hfcandidate->Reset();
       
     }
 
@@ -1494,8 +1574,10 @@ void charmJetAnalyzer(std::string filelist, int startfile, int endfile, int isMC
   }
   fout->cd();
   ct->Write();
-  gTree->Write();
-  D0withKpi->Write();
-  D0withoutKpi->Write();
+  if(doDMesonTree){
+      gTree->Write();
+      D0withKpi->Write();
+      D0withoutKpi->Write();
+  }
   fout->Close();
 }
